@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard — Mergen</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#0a0a0a; color:#f5f5f5; }
+  header { padding: 24px 20px; display:flex; justify-content:space-between; align-items:center; max-width:900px; margin:0 auto; }
+  header h1 { font-size:20px; margin:0; }
+  header a { color:#ccc; text-decoration:none; font-size:13px; }
+  .container { max-width:900px; margin:0 auto; padding:0 20px 60px; }
+  .card { background:#151515; border:1px solid #262626; border-radius:14px; padding:24px; margin-bottom:20px; }
+  label { display:block; font-size:13px; color:#aaa; margin:12px 0 6px; }
+  input, textarea { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #333; background:#0e0e0e; color:#fff; font-size:14px; }
+  textarea { min-height:120px; font-family:inherit; resize:vertical; }
+  button { margin-top:16px; background:#fff; color:#111; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px; }
+  button.secondary { background:transparent; color:#fff; border:1px solid #444; }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .tabs button { background:#1a1a1a; color:#ccc; border:1px solid #333; margin-top:0; }
+  .tabs button.active { background:#fff; color:#111; }
+  .hidden { display:none; }
+  .msg { font-size:13px; padding:8px 12px; border-radius:8px; margin-top:10px; }
+  .msg.error { background:#3a1414; color:#ff8a8a; }
+  .msg.ok { background:#123a1a; color:#8affa0; }
+  code { background:#0e0e0e; padding:2px 6px; border-radius:4px; font-size:13px; }
+  pre { background:#0e0e0e; padding:14px; border-radius:8px; overflow-x:auto; font-size:13px; }
+  .plan-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .plan-badge { background:#1f1f1f; border:1px solid #333; padding:4px 12px; border-radius:999px; font-size:12px; color:#ccc; }
+  .agent-list { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .agent-chip { padding:8px 14px; border-radius:8px; border:1px solid #333; background:#1a1a1a; color:#ccc; cursor:pointer; font-size:13px; }
+  .agent-chip.active { background:#fff; color:#111; border-color:#fff; }
+  .agent-chip.add { border-style:dashed; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mergen</h1>
+  <a href="/">Нүүр хуудас руу</a>
+</header>
+
+<div class="container">
+  <div id="authSection" class="card">
+    <div class="tabs">
+      <button id="tabLogin" class="active">Нэвтрэх</button>
+      <button id="tabSignup">Бүртгүүлэх</button>
+    </div>
+
+    <div id="loginForm">
+      <label>Email</label>
+      <input type="email" id="loginEmail" />
+      <label>Нууц үг</label>
+      <input type="password" id="loginPassword" />
+      <button onclick="login()">Нэвтрэх</button>
+    </div>
+
+    <div id="signupForm" class="hidden">
+      <label>Бизнесийн нэр</label>
+      <input type="text" id="signupBizName" />
+      <label>Email</label>
+      <input type="email" id="signupEmail" />
+      <label>Нууц үг</label>
+      <input type="password" id="signupPassword" />
+      <button onclick="signup()">Бүртгүүлэх</button>
+    </div>
+    <div id="authMsg"></div>
+  </div>
+
+  <div id="dashSection" class="hidden">
+
+    <div class="card">
+      <div class="plan-row">
+        <div><strong id="planLabel">-</strong> багц</div>
+        <span class="plan-badge" id="planUsage">0 / 0 agent</span>
+      </div>
+      <div class="agent-list" id="agentList"></div>
+    </div>
+
+    <div class="card" id="agentEditCard">
+      <h3>AI Agent тохиргоо</h3>
+      <label>Agent-ийн нэр</label>
+      <input type="text" id="agentName" />
+      <label>Мэндчилгээ (эхний зурвас)</label>
+      <input type="text" id="welcomeMsg" />
+      <label>Мэдлэгийн сан (Танай бизнесийн тухай, FAQ, үнэ, цагийн хуваарь гэх мэт — AI үүнд тулгуурлан хариулна)</label>
+      <textarea id="knowledgeBase" placeholder="Жишээ: Бид ... компани. Ажиллах цаг: 09:00-18:00. Хүргэлт ..."></textarea>
+      <button onclick="saveAgent()">Хадгалах</button>
+      <div id="agentMsg"></div>
+    </div>
+
+    <div class="card">
+      <h3>Widget суулгах код</h3>
+      <p style="color:#aaa;font-size:14px;">Дараах кодыг өөрийн вэбсайтын <code>&lt;/body&gt;</code> тагийн өмнө буулгана уу:</p>
+      <pre id="embedCode"></pre>
+    </div>
+
+    <button class="secondary" onclick="logout()">Гарах</button>
+  </div>
+</div>
+
+<script>
+  const API = '';
+  let token = localStorage.getItem('mergen_token');
+  let agents = [];
+  let currentAgentId = null;
+
+  document.getElementById('tabLogin').onclick = () => switchTab('login');
+  document.getElementById('tabSignup').onclick = () => switchTab('signup');
+
+  function switchTab(tab) {
+    document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('signupForm').classList.toggle('hidden', tab !== 'signup');
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+  }
+
+  function showMsg(elId, text, ok) {
+    const el = document.getElementById(elId);
+    el.innerHTML = '<div class="msg ' + (ok ? 'ok' : 'error') + '">' + text + '</div>';
+  }
+
+  async function signup() {
+    const business_name = document.getElementById('signupBizName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const res = await fetch(API + '/api/auth/signup', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ business_name, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('authMsg', data.error, false);
+    token = data.token;
+    localStorage.setItem('mergen_token', token);
+    enterDashboard();
+  }
+
+  async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const res = await fetch(API + '/api/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('authMsg', data.error, false);
+    token = data.token;
+    localStorage.setItem('mergen_token', token);
+    enterDashboard();
+  }
+
+  function logout() {
+    localStorage.removeItem('mergen_token');
+    token = null;
+    document.getElementById('dashSection').classList.add('hidden');
+    document.getElementById('authSection').classList.remove('hidden');
+  }
+
+  async function enterDashboard() {
+    document.getElementById('authSection').classList.add('hidden');
+    document.getElementById('dashSection').classList.remove('hidden');
+    await loadPlan();
+    await loadAgents();
+  }
+
+  async function loadPlan() {
+    const res = await fetch(API + '/api/agent/plan', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return logout();
+    const data = await res.json();
+    document.getElementById('planLabel').textContent = data.plan_label;
+    document.getElementById('planUsage').textContent = data.agents_used + ' / ' + data.max_agents + ' agent';
+    window._planData = data;
+  }
+
+  async function loadAgents() {
+    const res = await fetch(API + '/api/agent', { headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json();
+    agents = data.agents;
+    if (!currentAgentId && agents.length > 0) currentAgentId = agents[0].id;
+    renderAgentList();
+    renderAgentEditor();
+  }
+
+  function renderAgentList() {
+    const list = document.getElementById('agentList');
+    list.innerHTML = '';
+    agents.forEach((a) => {
+      const chip = document.createElement('div');
+      chip.className = 'agent-chip' + (a.id === currentAgentId ? ' active' : '');
+      chip.textContent = a.agent_name + (a.is_primary ? ' (үндсэн)' : '');
+      chip.onclick = () => { currentAgentId = a.id; renderAgentList(); renderAgentEditor(); };
+      list.appendChild(chip);
+    });
+    const canAdd = window._planData && agents.length < window._planData.max_agents;
+    const addChip = document.createElement('div');
+    addChip.className = 'agent-chip add' + (canAdd ? '' : ' hidden');
+    addChip.textContent = '+ Шинэ agent';
+    addChip.onclick = addAgent;
+    list.appendChild(addChip);
+  }
+
+  function renderAgentEditor() {
+    const agent = agents.find((a) => a.id === currentAgentId);
+    if (!agent) return;
+    document.getElementById('agentName').value = agent.agent_name || '';
+    document.getElementById('welcomeMsg').value = agent.welcome_message || '';
+    document.getElementById('knowledgeBase').value = agent.knowledge_base || '';
+    const origin = window.location.origin;
+    document.getElementById('embedCode').textContent =
+      '<script src="' + origin + '/widget.js" data-widget-key="' + agent.widget_key + '"><' + '/script>';
+  }
+
+  async function addAgent() {
+    const res = await fetch(API + '/api/agent', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ agent_name: 'Шинэ agent' })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('agentMsg', data.error || 'Алдаа гарлаа', false);
+    await loadPlan();
+    await loadAgents();
+    currentAgentId = data.agent.id;
+    renderAgentList();
+    renderAgentEditor();
+  }
+
+  async function saveAgent() {
+    const agent_name = document.getElementById('agentName').value;
+    const welcome_message = document.getElementById('welcomeMsg').value;
+    const knowledge_base = document.getElementById('knowledgeBase').value;
+    const res = await fetch(API + '/api/agent/' + currentAgentId, {
+      method: 'PUT',
+      headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ agent_name, welcome_message, knowledge_base })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('agentMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('agentMsg', 'Хадгалагдлаа ✓', true);
+    await loadAgents();
+  }
+
+  if (token) enterDashboard();
+</script>
+</body>
+</html>
