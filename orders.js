@@ -1,12 +1,14 @@
 const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./authMiddleware');
+const { requireFeature } = require('./planMiddleware');
 
 const router = express.Router();
+const requirePlan = [requireAuth, requireFeature('orders')];
 
 // ================= Products =================
 
-router.get('/products', requireAuth, async (req, res) => {
+router.get('/products', requirePlan, async (req, res) => {
   const result = await pool.query(
     'SELECT * FROM products WHERE business_id = $1 ORDER BY created_at DESC',
     [req.businessId]
@@ -14,7 +16,7 @@ router.get('/products', requireAuth, async (req, res) => {
   res.json({ products: result.rows });
 });
 
-router.post('/products', requireAuth, async (req, res) => {
+router.post('/products', requirePlan, async (req, res) => {
   const { name, price, description, image_url, in_stock } = req.body;
   if (!name || price === undefined) return res.status(400).json({ error: 'name, price шаардлагатай' });
   const result = await pool.query(
@@ -25,7 +27,7 @@ router.post('/products', requireAuth, async (req, res) => {
   res.json({ product: result.rows[0] });
 });
 
-router.put('/products/:id', requireAuth, async (req, res) => {
+router.put('/products/:id', requirePlan, async (req, res) => {
   const { name, price, description, image_url, in_stock } = req.body;
   const result = await pool.query(
     `UPDATE products SET
@@ -41,14 +43,14 @@ router.put('/products/:id', requireAuth, async (req, res) => {
   res.json({ product: result.rows[0] });
 });
 
-router.delete('/products/:id', requireAuth, async (req, res) => {
+router.delete('/products/:id', requirePlan, async (req, res) => {
   await pool.query('DELETE FROM products WHERE id = $1 AND business_id = $2', [req.params.id, req.businessId]);
   res.json({ ok: true });
 });
 
 // ================= Orders =================
 
-router.get('/orders', requireAuth, async (req, res) => {
+router.get('/orders', requirePlan, async (req, res) => {
   const { status } = req.query;
   const params = [req.businessId];
   let where = 'business_id = $1';
@@ -74,7 +76,7 @@ router.get('/orders', requireAuth, async (req, res) => {
   res.json({ orders });
 });
 
-router.post('/orders', requireAuth, async (req, res) => {
+router.post('/orders', requirePlan, async (req, res) => {
   const { customer_name, customer_phone, notes, items } = req.body;
   if (!customer_name || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'customer_name, items (хамгийн багадаа 1) шаардлагатай' });
@@ -100,7 +102,7 @@ router.post('/orders', requireAuth, async (req, res) => {
   res.json({ order });
 });
 
-router.put('/orders/:id/status', requireAuth, async (req, res) => {
+router.put('/orders/:id/status', requirePlan, async (req, res) => {
   const { status } = req.body;
   const allowed = ['new', 'confirmed', 'preparing', 'done', 'cancelled'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'status буруу байна' });
@@ -112,7 +114,7 @@ router.put('/orders/:id/status', requireAuth, async (req, res) => {
   res.json({ order: result.rows[0] });
 });
 
-router.get('/orders/stats', requireAuth, async (req, res) => {
+router.get('/orders/stats', requirePlan, async (req, res) => {
   const result = await pool.query(
     `SELECT status, COUNT(*) AS count, COALESCE(SUM(total_amount),0) AS total
      FROM orders WHERE business_id = $1 GROUP BY status`,

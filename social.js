@@ -31,7 +31,7 @@ router.post('/connect', requireAuth, async (req, res) => {
 
 router.get('/', requireAuth, async (req, res) => {
   const result = await pool.query(
-    `SELECT id, platform, page_id, ig_business_id, trollguard_enabled, auto_reply_enabled, created_at
+    `SELECT id, platform, page_id, page_name, ig_business_id, trollguard_enabled, auto_reply_enabled, created_at
      FROM social_accounts WHERE business_id = $1`,
     [req.businessId]
   );

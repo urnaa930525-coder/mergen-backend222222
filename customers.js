@@ -1,11 +1,13 @@
 const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./authMiddleware');
+const { requireFeature } = require('./planMiddleware');
 
 const router = express.Router();
+router.use(requireAuth, requireFeature('crm'));
 
 // ---- List customers (with simple search) ----
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', async (req, res) => {
   const { q, status } = req.query;
   const params = [req.businessId];
   let where = 'business_id = $1';
@@ -27,7 +29,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // ---- Create ----
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', async (req, res) => {
   const { name, phone, email, status, notes } = req.body;
   if (!name) return res.status(400).json({ error: 'Нэр шаардлагатай' });
   const result = await pool.query(
@@ -39,7 +41,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // ---- Update ----
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', async (req, res) => {
   const { name, phone, email, status, notes } = req.body;
   const result = await pool.query(
     `UPDATE customers SET
@@ -57,13 +59,13 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // ---- Delete ----
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   await pool.query('DELETE FROM customers WHERE id = $1 AND business_id = $2', [req.params.id, req.businessId]);
   res.json({ ok: true });
 });
 
 // ---- Simple stats: totals by status ----
-router.get('/stats', requireAuth, async (req, res) => {
+router.get('/stats', async (req, res) => {
   const result = await pool.query(
     `SELECT status, COUNT(*) AS count FROM customers WHERE business_id = $1 GROUP BY status`,
     [req.businessId]

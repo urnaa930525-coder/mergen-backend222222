@@ -8,10 +8,26 @@ const pool = new Pool({
 });
 
 // Plan definitions: agent-count based, unlimited usage within a plan.
+// `features` gates access to CRM/orders/marketing/analytics per the pricing page.
 const PLANS = {
-  start: { label: 'Start', max_agents: 1, price: 49900 },
-  business: { label: 'Business', max_agents: 3, price: 129900 },
-  enterprise: { label: 'Enterprise', max_agents: 10, price: 349900 },
+  start: {
+    label: 'Start',
+    max_agents: 1,
+    price: 49900,
+    features: ['chat', 'comments', 'trollguard', 'site_builder'],
+  },
+  business: {
+    label: 'Business',
+    max_agents: 3,
+    price: 129900,
+    features: ['chat', 'comments', 'trollguard', 'site_builder', 'orders', 'marketing', 'analytics'],
+  },
+  enterprise: {
+    label: 'Enterprise',
+    max_agents: 10,
+    price: 349900,
+    features: ['chat', 'comments', 'trollguard', 'site_builder', 'orders', 'marketing', 'analytics', 'crm'],
+  },
 };
 
 async function initDb() {

@@ -1,14 +1,16 @@
 const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./authMiddleware');
+const { requireFeature } = require('./planMiddleware');
 const { sendSms } = require('./sms');
 
 const router = express.Router();
 const GRAPH_VERSION = 'v19.0';
+const requirePlan = [requireAuth, requireFeature('marketing')];
 
 // ================= Scheduled posts =================
 
-router.get('/posts', requireAuth, async (req, res) => {
+router.get('/posts', requirePlan, async (req, res) => {
   const result = await pool.query(
     'SELECT * FROM scheduled_posts WHERE business_id = $1 ORDER BY scheduled_at DESC LIMIT 100',
     [req.businessId]
@@ -16,7 +18,7 @@ router.get('/posts', requireAuth, async (req, res) => {
   res.json({ posts: result.rows });
 });
 
-router.post('/posts', requireAuth, async (req, res) => {
+router.post('/posts', requirePlan, async (req, res) => {
   const { caption, media_url, scheduled_at, platform } = req.body;
   if (!caption || !scheduled_at) {
     return res.status(400).json({ error: 'caption, scheduled_at шаардлагатай' });
@@ -29,7 +31,7 @@ router.post('/posts', requireAuth, async (req, res) => {
   res.json({ post: result.rows[0] });
 });
 
-router.delete('/posts/:id', requireAuth, async (req, res) => {
+router.delete('/posts/:id', requirePlan, async (req, res) => {
   await pool.query(
     'DELETE FROM scheduled_posts WHERE id = $1 AND business_id = $2 AND status = $3',
     [req.params.id, req.businessId, 'pending']
@@ -39,7 +41,7 @@ router.delete('/posts/:id', requireAuth, async (req, res) => {
 
 // ================= SMS =================
 
-router.get('/sms', requireAuth, async (req, res) => {
+router.get('/sms', requirePlan, async (req, res) => {
   const result = await pool.query(
     'SELECT * FROM sms_logs WHERE business_id = $1 ORDER BY created_at DESC LIMIT 50',
     [req.businessId]
@@ -47,7 +49,7 @@ router.get('/sms', requireAuth, async (req, res) => {
   res.json({ logs: result.rows });
 });
 
-router.post('/sms', requireAuth, async (req, res) => {
+router.post('/sms', requirePlan, async (req, res) => {
   const { phone, message } = req.body;
   if (!phone || !message) return res.status(400).json({ error: 'phone, message шаардлагатай' });
 

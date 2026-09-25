@@ -1,10 +1,11 @@
 const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./authMiddleware');
+const { requireFeature } = require('./planMiddleware');
 
 const router = express.Router();
 
-router.get('/summary', requireAuth, async (req, res) => {
+router.get('/summary', requireAuth, requireFeature('analytics'), async (req, res) => {
   const businessId = req.businessId;
 
   const [

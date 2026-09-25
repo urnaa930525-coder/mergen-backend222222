@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="analyticsCard">
       <h3>Тайлан</h3>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:14px;">
         <div style="background:#0e0e0e;border:1px solid #262626;border-radius:10px;padding:14px;">
@@ -184,7 +184,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="marketingCard">
       <h3>Маркетинг автоматжуулалт</h3>
       <p style="color:#aaa;font-size:14px;">Пост товлож, SMS мэдэгдэл илгээ. Пост нийтлэхийн тулд дээрх "Коммент автоматжуулалт" хэсэгт Facebook Page-ээ холбосон байх шаардлагатай.</p>
 
@@ -209,7 +209,7 @@
       <div id="smsList" style="margin-top:16px;"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="crmCard">
       <h3>Харилцагчийн удирдлага</h3>
       <p style="color:#aaa;font-size:14px;">Lead болон харилцагчдаа бүртгэж, дагаж мөрдөнө.</p>
 
@@ -240,7 +240,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="productsCard">
       <h3>Бүтээгдэхүүн</h3>
       <label>Нэр</label>
       <input type="text" id="prodName" />
@@ -255,7 +255,7 @@
       <div id="productList" style="margin-top:14px;"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="ordersCard">
       <h3>Захиалгууд</h3>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;" id="orderStats"></div>
       <div id="orderList"></div>
@@ -344,6 +344,43 @@
     document.getElementById('planLabel').textContent = data.plan_label;
     document.getElementById('planUsage').textContent = data.agents_used + ' / ' + data.max_agents + ' agent';
     window._planData = data;
+    applyPlanFeatures();
+  }
+
+  function applyPlanFeatures() {
+    const data = window._planData;
+    if (!data) return;
+    const features = (data.all_plans[data.plan] || data.all_plans.start).features;
+    const cardFeatureMap = {
+      analyticsCard: 'analytics',
+      marketingCard: 'marketing',
+      crmCard: 'crm',
+      productsCard: 'orders',
+      ordersCard: 'orders',
+    };
+    Object.keys(cardFeatureMap).forEach((cardId) => {
+      const el = document.getElementById(cardId);
+      if (!el) return;
+      const needed = cardFeatureMap[cardId];
+      const has = features.includes(needed);
+      let lock = el.querySelector('.plan-lock');
+      if (!has) {
+        el.style.opacity = '0.45';
+        el.style.pointerEvents = 'none';
+        el.style.position = 'relative';
+        if (!lock) {
+          lock = document.createElement('div');
+          lock.className = 'plan-lock';
+          lock.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,10,0.55);border-radius:14px;font-size:13px;color:#fff;text-align:center;padding:20px;pointer-events:auto;';
+          lock.innerHTML = '🔒 Энэ боломж таны багцад ороогүй байна.<br/>Дээд талын "Багц шинэчлэх" хэсгээс шинэчлээрэй.';
+          el.appendChild(lock);
+        }
+      } else {
+        el.style.opacity = '';
+        el.style.pointerEvents = '';
+        if (lock) lock.remove();
+      }
+    });
   }
 
   let qpayPollTimer = null;
