@@ -88,6 +88,101 @@ async function initDb() {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sites (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      slug TEXT UNIQUE NOT NULL,
+      title TEXT DEFAULT 'Миний сайт',
+      blocks JSONB DEFAULT '[]',
+      bg_color TEXT DEFAULT '#fff8f0',
+      accent_color TEXT DEFAULT '#e8562f',
+      published BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+  // Safe additive migration for deployments where `sites` already existed before these columns were added.
+  await pool.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS bg_color TEXT DEFAULT '#fff8f0';`);
+  await pool.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#e8562f';`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS scheduled_posts (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      caption TEXT NOT NULL,
+      media_url TEXT,
+      platform TEXT NOT NULL DEFAULT 'facebook',
+      scheduled_at TIMESTAMP NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sms_logs (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      phone TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS customers (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      phone TEXT,
+      email TEXT,
+      status TEXT NOT NULL DEFAULT 'lead',
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS products (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      price NUMERIC NOT NULL DEFAULT 0,
+      description TEXT,
+      image_url TEXT,
+      in_stock BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT,
+      status TEXT NOT NULL DEFAULT 'new',
+      total_amount NUMERIC NOT NULL DEFAULT 0,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+      product_name TEXT NOT NULL,
+      price NUMERIC NOT NULL DEFAULT 0,
+      quantity INTEGER NOT NULL DEFAULT 1
+    );
+  `);
+
   console.log('Database schema ready.');
 }
 

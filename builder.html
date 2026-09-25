@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Вэбсайт угсрах — Mergen</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#0a0a0a; color:#f5f5f5; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #262626; }
+  header .left { display:flex; align-items:center; gap:14px; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header a { color:#999; text-decoration:none; font-size:13px; }
+  .site-title-input { background:transparent; border:none; color:#fff; font-size:14px; padding:4px 8px; border-radius:6px; width:220px; }
+  .site-title-input:focus { outline:1px solid #444; }
+  .header-actions { display:flex; gap:10px; align-items:center; }
+  button { background:#fff; color:#111; border:none; padding:9px 16px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
+  button.secondary { background:#1a1a1a; color:#ccc; border:1px solid #333; }
+  button.ghost { background:transparent; color:#999; border:1px solid #333; padding:6px 10px; }
+  .layout { display:grid; grid-template-columns: 220px 1fr 300px; height: calc(100vh - 57px); }
+  .palette { border-right:1px solid #262626; padding:18px 14px; overflow-y:auto; }
+  .palette h3 { font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:#777; margin:0 0 12px; }
+  .palette-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:#151515; border:1px solid #262626; margin-bottom:8px; cursor:pointer; font-size:13px; }
+  .palette-item:hover { background:#1c1c1c; }
+  .palette-item .ic { width:20px; text-align:center; opacity:0.8; }
+
+  .canvas-wrap { overflow-y:auto; background:#050505; padding:30px; }
+  .canvas { max-width:640px; margin:0 auto; background:#fff; color:#181818; min-height:70vh; border-radius:10px; padding:40px 32px; }
+  .canvas-empty { text-align:center; color:#999; padding:80px 20px; font-size:14px; }
+
+  .cblock { position:relative; padding:8px; margin-bottom:4px; border-radius:8px; border:1px dashed transparent; cursor:grab; }
+  .cblock:hover { border-color:#ccc; }
+  .cblock.selected { border-color:#181818; border-style:solid; }
+  .cblock .del-btn { position:absolute; top:2px; right:2px; background:#181818; color:#fff; border:none; width:20px; height:20px; border-radius:50%; font-size:12px; line-height:1; cursor:pointer; display:none; }
+  .cblock:hover .del-btn { display:block; }
+  .cblock.dragging { opacity:0.4; }
+
+  .blk-heading { font-size: 30px; font-weight: 700; margin: 0; line-height:1.25; }
+  .blk-text { font-size: 15px; color: #444; margin: 0; white-space:pre-wrap; }
+  .blk-image { width: 100%; border-radius: 8px; display:block; }
+  .blk-button { display:inline-block; background:#181818; color:#fff; text-decoration:none; padding: 10px 20px; border-radius: 8px; font-weight:600; font-size:14px; }
+  .blk-divider { border: none; border-top: 1px solid #e5e5e5; margin: 0; }
+
+  .inspector { border-left:1px solid #262626; padding:18px 16px; overflow-y:auto; }
+  .inspector h3 { font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:#777; margin:0 0 14px; }
+  .inspector label { display:block; font-size:12px; color:#999; margin:12px 0 5px; }
+  .inspector input, .inspector textarea { width:100%; padding:9px 10px; border-radius:7px; border:1px solid #333; background:#151515; color:#fff; font-size:13px; }
+  .inspector textarea { min-height:90px; font-family:inherit; resize:vertical; }
+  .empty-hint { color:#666; font-size:13px; }
+  .status { font-size:12px; color:#777; margin-left:10px; }
+  .publish-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#ccc; }
+  .publish-row input { width:auto; }
+  .site-link { font-size:12px; color:#8ab4ff; word-break:break-all; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <a href="/dashboard.html">← Dashboard</a>
+    <input class="site-title-input" id="siteTitle" placeholder="Сайтын нэр" />
+  </div>
+  <div class="header-actions">
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#999;">
+      Дэвсгэр
+      <input type="color" id="bgColorInput" style="width:26px;height:26px;padding:0;border:none;border-radius:6px;cursor:pointer;background:transparent;" />
+    </label>
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#999;">
+      Өнгө
+      <input type="color" id="accentColorInput" style="width:26px;height:26px;padding:0;border:none;border-radius:6px;cursor:pointer;background:transparent;" />
+    </label>
+    <span class="status" id="saveStatus"></span>
+    <button class="secondary" onclick="saveSite()">Хадгалах</button>
+    <button onclick="togglePublish()" id="publishBtn">Нийтлэх</button>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="palette">
+    <h3>Блокууд</h3>
+    <div class="palette-item" onclick="addBlock('heading')"><span class="ic">H</span> Гарчиг</div>
+    <div class="palette-item" onclick="addBlock('text')"><span class="ic">¶</span> Текст</div>
+    <div class="palette-item" onclick="addBlock('image')"><span class="ic">▧</span> Зураг</div>
+    <div class="palette-item" onclick="addBlock('button')"><span class="ic">▭</span> Товч</div>
+    <div class="palette-item" onclick="addBlock('divider')"><span class="ic">—</span> Зураас</div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="canvas" id="canvas">
+      <div class="canvas-empty" id="canvasEmpty">Зүүн талаас блок нэмж эхэлнэ үү →</div>
+    </div>
+  </div>
+
+  <div class="inspector" id="inspector">
+    <h3>Тохиргоо</h3>
+    <div class="empty-hint" id="inspectorEmpty">Засах блокоо canvas дээрээс дарна уу.</div>
+    <div id="inspectorForm" class="hidden" style="display:none;"></div>
+
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid #262626;">
+      <label class="publish-row">
+        <input type="checkbox" id="publishedCheck" disabled />
+        Нийтлэгдсэн
+      </label>
+      <div class="site-link" id="siteLink"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '';
+  const token = localStorage.getItem('mergen_token');
+  if (!token) window.location.href = '/dashboard.html';
+
+  let site = null;
+  let blocks = [];
+  let selectedId = null;
+  let dragIndex = null;
+  let saveTimer = null;
+
+  function uid() { return 'b' + Math.random().toString(36).slice(2, 10); }
+
+  function defaultContent(type) {
+    if (type === 'heading') return { text: 'Гарчиг бичих' };
+    if (type === 'text') return { text: 'Энд өгүүлбэрээ бичнэ үү.' };
+    if (type === 'image') return { url: '', alt: '' };
+    if (type === 'button') return { text: 'Холбогдох', url: '#' };
+    if (type === 'divider') return {};
+    return {};
+  }
+
+  async function loadSite() {
+    const res = await fetch(API + '/api/site', { headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json();
+    site = data.site;
+    blocks = Array.isArray(site.blocks) ? site.blocks : [];
+    document.getElementById('siteTitle').value = site.title || '';
+    document.getElementById('bgColorInput').value = site.bg_color || '#fff8f0';
+    document.getElementById('accentColorInput').value = site.accent_color || '#e8562f';
+    document.getElementById('publishedCheck').checked = site.published;
+    document.getElementById('publishBtn').textContent = site.published ? 'Нийтлэлээс буулгах' : 'Нийтлэх';
+    updateSiteLink();
+    renderCanvas();
+    applyThemePreview();
+  }
+
+  function updateSiteLink() {
+    const origin = window.location.origin;
+    document.getElementById('siteLink').innerHTML = site.published
+      ? 'Таны сайт: <a href="' + origin + '/site/' + site.slug + '" target="_blank" style="color:#8ab4ff;">' + origin + '/site/' + site.slug + '</a>'
+      : '';
+  }
+
+  function addBlock(type) {
+    blocks.push({ id: uid(), type, content: defaultContent(type) });
+    renderCanvas();
+    selectBlock(blocks[blocks.length - 1].id);
+    scheduleAutosave();
+  }
+
+  function deleteBlock(id) {
+    blocks = blocks.filter((b) => b.id !== id);
+    if (selectedId === id) selectedId = null;
+    renderCanvas();
+    renderInspector();
+    scheduleAutosave();
+  }
+
+  function selectBlock(id) {
+    selectedId = id;
+    renderCanvas();
+    renderInspector();
+  }
+
+  function renderCanvas() {
+    const canvas = document.getElementById('canvas');
+    const empty = document.getElementById('canvasEmpty');
+    canvas.querySelectorAll('.cblock').forEach((el) => el.remove());
+    applyThemePreview();
+    if (blocks.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    blocks.forEach((b, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'cblock' + (b.id === selectedId ? ' selected' : '');
+      wrap.draggable = true;
+      wrap.dataset.index = idx;
+      wrap.onclick = (e) => { e.stopPropagation(); selectBlock(b.id); };
+
+      wrap.ondragstart = () => { dragIndex = idx; wrap.classList.add('dragging'); };
+      wrap.ondragend = () => wrap.classList.remove('dragging');
+      wrap.ondragover = (e) => e.preventDefault();
+      wrap.ondrop = (e) => {
+        e.preventDefault();
+        const dropIndex = idx;
+        if (dragIndex === null || dragIndex === dropIndex) return;
+        const [moved] = blocks.splice(dragIndex, 1);
+        blocks.splice(dropIndex, 0, moved);
+        dragIndex = null;
+        renderCanvas();
+        scheduleAutosave();
+      };
+
+      const del = document.createElement('button');
+      del.className = 'del-btn';
+      del.textContent = '×';
+      del.onclick = (e) => { e.stopPropagation(); deleteBlock(b.id); };
+      wrap.appendChild(del);
+
+      const content = document.createElement('div');
+      if (b.type === 'heading') {
+        content.innerHTML = '<div class="blk-heading">' + escapeHtml(b.content.text || '') + '</div>';
+      } else if (b.type === 'text') {
+        content.innerHTML = '<div class="blk-text">' + escapeHtml(b.content.text || '') + '</div>';
+      } else if (b.type === 'image') {
+        content.innerHTML = b.content.url
+          ? '<img class="blk-image" src="' + escapeAttr(b.content.url) + '" />'
+          : '<div style="background:#f0f0f0;border-radius:8px;padding:40px;text-align:center;color:#999;font-size:13px;">Зургийн URL оруулаагүй байна</div>';
+      } else if (b.type === 'button') {
+        content.innerHTML = '<span class="blk-button">' + escapeHtml(b.content.text || 'Товч') + '</span>';
+      } else if (b.type === 'divider') {
+        content.innerHTML = '<hr class="blk-divider" />';
+      }
+      wrap.appendChild(content);
+      canvas.appendChild(wrap);
+    });
+    applyThemePreview();
+  }
+
+  function renderInspector() {
+    const form = document.getElementById('inspectorForm');
+    const empty = document.getElementById('inspectorEmpty');
+    const b = blocks.find((x) => x.id === selectedId);
+    if (!b) {
+      form.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    form.style.display = 'block';
+    form.innerHTML = '';
+
+    function field(labelText, key, isTextarea) {
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      const input = document.createElement(isTextarea ? 'textarea' : 'input');
+      input.value = b.content[key] || '';
+      input.oninput = () => {
+        b.content[key] = input.value;
+        renderCanvas();
+        selectBlock(b.id);
+        scheduleAutosave();
+      };
+      form.appendChild(label);
+      form.appendChild(input);
+    }
+
+    if (b.type === 'heading') field('Гарчиг', 'text', true);
+    if (b.type === 'text') field('Текст', 'text', true);
+    if (b.type === 'image') { field('Зургийн URL', 'url'); field('Alt текст', 'alt'); }
+    if (b.type === 'button') { field('Товчны текст', 'text'); field('Холбоос (URL)', 'url'); }
+    if (b.type === 'divider') { const p = document.createElement('div'); p.className = 'empty-hint'; p.textContent = 'Тохиргоо шаардлагагүй.'; form.appendChild(p); }
+  }
+
+  document.getElementById('canvas').onclick = () => { selectedId = null; renderCanvas(); renderInspector(); };
+
+  function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escapeAttr(str) { return escapeHtml(str).replace(/"/g,'&quot;'); }
+
+  function scheduleAutosave() {
+    document.getElementById('saveStatus').textContent = 'Хадгалаагүй...';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveSite, 1200);
+  }
+
+  async function saveSite() {
+    const title = document.getElementById('siteTitle').value;
+    const bg_color = document.getElementById('bgColorInput').value;
+    const accent_color = document.getElementById('accentColorInput').value;
+    const res = await fetch(API + '/api/site', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ title, blocks, bg_color, accent_color })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      site = data.site;
+      document.getElementById('saveStatus').textContent = 'Хадгалагдлаа ✓';
+      updateSiteLink();
+    } else {
+      document.getElementById('saveStatus').textContent = data.error || 'Алдаа гарлаа';
+    }
+  }
+
+  async function togglePublish() {
+    const next = !site.published;
+    const res = await fetch(API + '/api/site/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ published: next })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      site = data.site;
+      document.getElementById('publishedCheck').checked = site.published;
+      document.getElementById('publishBtn').textContent = site.published ? 'Нийтлэлээс буулгах' : 'Нийтлэх';
+      updateSiteLink();
+    }
+  }
+
+  document.getElementById('siteTitle').addEventListener('input', scheduleAutosave);
+  document.getElementById('bgColorInput').addEventListener('input', () => { applyThemePreview(); scheduleAutosave(); });
+  document.getElementById('accentColorInput').addEventListener('input', () => { applyThemePreview(); scheduleAutosave(); });
+
+  function applyThemePreview() {
+    const bg = document.getElementById('bgColorInput').value;
+    const accent = document.getElementById('accentColorInput').value;
+    document.getElementById('canvas').style.background = bg;
+    document.querySelectorAll('.blk-button').forEach((el) => { el.style.background = accent; });
+    document.querySelectorAll('.blk-divider').forEach((el) => { el.style.borderTopColor = accent; });
+  }
+  document.getElementById('bgColorInput').addEventListener('input', scheduleAutosave);
+  document.getElementById('accentColorInput').addEventListener('input', scheduleAutosave);
+
+  loadSite();
+</script>
+</body>
+</html>

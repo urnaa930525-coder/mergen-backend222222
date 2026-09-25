@@ -78,6 +78,37 @@
       <div class="agent-list" id="agentList"></div>
     </div>
 
+    <div class="card">
+      <h3>Тайлан</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:14px;">
+        <div style="background:#0e0e0e;border:1px solid #262626;border-radius:10px;padding:14px;">
+          <div style="font-size:22px;font-weight:700;" id="statConversations">-</div>
+          <div style="font-size:12px;color:#999;margin-top:4px;">Харилцан яриа</div>
+        </div>
+        <div style="background:#0e0e0e;border:1px solid #262626;border-radius:10px;padding:14px;">
+          <div style="font-size:22px;font-weight:700;" id="statMessages">-</div>
+          <div style="font-size:12px;color:#999;margin-top:4px;">Нийт мессеж</div>
+        </div>
+        <div style="background:#0e0e0e;border:1px solid #262626;border-radius:10px;padding:14px;">
+          <div style="font-size:22px;font-weight:700;" id="statOrders">-</div>
+          <div style="font-size:12px;color:#999;margin-top:4px;">Захиалга</div>
+        </div>
+        <div style="background:#0e0e0e;border:1px solid #262626;border-radius:10px;padding:14px;">
+          <div style="font-size:22px;font-weight:700;" id="statRevenue">-</div>
+          <div style="font-size:12px;color:#999;margin-top:4px;">Нийт орлого</div>
+        </div>
+      </div>
+
+      <h4 style="margin:22px 0 8px;font-size:13px;color:#aaa;">Сүүлийн 14 хоногийн харилцан яриа</h4>
+      <div id="chatChart" style="display:flex;align-items:flex-end;gap:4px;height:80px;"></div>
+
+      <h4 style="margin:22px 0 8px;font-size:13px;color:#aaa;">Захиалга төлвөөр</h4>
+      <div id="orderStatusBars"></div>
+
+      <h4 style="margin:22px 0 8px;font-size:13px;color:#aaa;">Коммент ангилалт</h4>
+      <div id="commentStats" style="font-size:13px;color:#ccc;"></div>
+    </div>
+
     <div class="card" id="agentEditCard">
       <h3>AI Agent тохиргоо</h3>
       <label>Agent-ийн нэр</label>
@@ -94,6 +125,113 @@
       <h3>Widget суулгах код</h3>
       <p style="color:#aaa;font-size:14px;">Дараах кодыг өөрийн вэбсайтын <code>&lt;/body&gt;</code> тагийн өмнө буулгана уу:</p>
       <pre id="embedCode"></pre>
+    </div>
+
+    <div class="card">
+      <h3>Вэбсайтаа угсрах</h3>
+      <p style="color:#aaa;font-size:14px;">Drag-and-drop засварлагчаар өөрийн энгийн вэбсайтаа угсарч, нийтэд нийтлээрэй.</p>
+      <a href="/builder.html"><button>Угсрах хэсэг рүү орох</button></a>
+    </div>
+
+    <div class="card">
+      <h3>Коммент автоматжуулалт + TrollGuard</h3>
+      <p style="color:#aaa;font-size:14px;">Instagram/Facebook Page холбоод, коммент автоматжуулалтаа асаана уу. Утга авахын тулд эхлээд Meta Developer App үүсгэж, Page Access Token авах шаардлагатай.</p>
+      <label>Facebook Page ID</label>
+      <input type="text" id="pageId" placeholder="жишээ нь: 1234567890" />
+      <label>Instagram Business Account ID (сонголт)</label>
+      <input type="text" id="igBusinessId" placeholder="жишээ нь: 1789xxxxxxx" />
+      <label>Page Access Token</label>
+      <input type="text" id="accessToken" placeholder="EAAxxxxxxxxxxxx..." />
+      <button onclick="saveSocial()">Холбох</button>
+      <div id="socialMsg"></div>
+
+      <div id="socialSettings" class="hidden" style="margin-top:18px;padding-top:18px;border-top:1px solid #262626;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="trollguardEnabled" style="width:auto;" onchange="saveSocialSettings()" />
+          TrollGuard асаах (муу коммент автоматаар нуух)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:10px;">
+          <input type="checkbox" id="autoReplyEnabled" style="width:auto;" onchange="saveSocialSettings()" />
+          Коммент автомат хариулт асаах
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Маркетинг автоматжуулалт</h3>
+      <p style="color:#aaa;font-size:14px;">Пост товлож, SMS мэдэгдэл илгээ. Пост нийтлэхийн тулд дээрх "Коммент автоматжуулалт" хэсэгт Facebook Page-ээ холбосон байх шаардлагатай.</p>
+
+      <h4 style="margin:20px 0 6px;font-size:14px;">Пост товлох</h4>
+      <label>Гарчиг/текст</label>
+      <textarea id="postCaption" style="min-height:70px;"></textarea>
+      <label>Зургийн URL (сонголт)</label>
+      <input type="text" id="postMediaUrl" placeholder="https://..." />
+      <label>Нийтлэх огноо, цаг</label>
+      <input type="datetime-local" id="postScheduledAt" />
+      <button onclick="schedulePost()">Товлох</button>
+      <div id="postMsg"></div>
+      <div id="postList" style="margin-top:16px;"></div>
+
+      <h4 style="margin:24px 0 6px;font-size:14px;border-top:1px solid #262626;padding-top:20px;">SMS илгээх</h4>
+      <label>Утасны дугаар</label>
+      <input type="text" id="smsPhone" placeholder="9911xxxx" />
+      <label>Зурвас</label>
+      <textarea id="smsMessage" style="min-height:60px;"></textarea>
+      <button onclick="sendSmsMsg()">Илгээх</button>
+      <div id="smsMsg"></div>
+      <div id="smsList" style="margin-top:16px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Харилцагчийн удирдлага</h3>
+      <p style="color:#aaa;font-size:14px;">Lead болон харилцагчдаа бүртгэж, дагаж мөрдөнө.</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <span class="plan-badge" id="leadCount">0 lead</span>
+        <span class="plan-badge" id="customerCount">0 харилцагч</span>
+      </div>
+
+      <label>Нэр</label>
+      <input type="text" id="custName" />
+      <label>Утас</label>
+      <input type="text" id="custPhone" placeholder="9911xxxx" />
+      <label>Имэйл (сонголт)</label>
+      <input type="text" id="custEmail" />
+      <label>Төлөв</label>
+      <select id="custStatus" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #333;background:#0e0e0e;color:#fff;font-size:14px;">
+        <option value="lead">Lead</option>
+        <option value="customer">Харилцагч</option>
+      </select>
+      <label>Тэмдэглэл</label>
+      <textarea id="custNotes" style="min-height:60px;"></textarea>
+      <button onclick="addCustomer()">Нэмэх</button>
+      <div id="custMsg"></div>
+
+      <div style="margin-top:16px;">
+        <input type="text" id="custSearch" placeholder="Хайх (нэр, утас, имэйл)..." oninput="loadCustomers()" style="margin-bottom:12px;" />
+        <div id="customerList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Бүтээгдэхүүн</h3>
+      <label>Нэр</label>
+      <input type="text" id="prodName" />
+      <label>Үнэ (₮)</label>
+      <input type="number" id="prodPrice" />
+      <label>Тайлбар (сонголт)</label>
+      <input type="text" id="prodDesc" />
+      <label>Зургийн URL (сонголт)</label>
+      <input type="text" id="prodImage" />
+      <button onclick="addProduct()">Бүтээгдэхүүн нэмэх</button>
+      <div id="prodMsg"></div>
+      <div id="productList" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Захиалгууд</h3>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;" id="orderStats"></div>
+      <div id="orderList"></div>
     </div>
 
     <button class="secondary" onclick="logout()">Гарах</button>
@@ -162,6 +300,14 @@
     document.getElementById('dashSection').classList.remove('hidden');
     await loadPlan();
     await loadAgents();
+    await loadSocial();
+    await loadPosts();
+    await loadSms();
+    await loadCustomers();
+    await loadCustomerStats();
+    await loadProducts();
+    await loadOrders();
+    await loadAnalytics();
   }
 
   async function loadPlan() {
@@ -242,6 +388,387 @@
   }
 
   if (token) enterDashboard();
+
+  async function loadSocial() {
+    const res = await fetch(API + '/api/social', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.account) {
+      document.getElementById('pageId').value = data.account.page_id || '';
+      document.getElementById('igBusinessId').value = data.account.ig_business_id || '';
+      document.getElementById('accessToken').placeholder = 'Холбогдсон — солихын тулд шинэ token оруулна уу';
+      document.getElementById('trollguardEnabled').checked = data.account.trollguard_enabled;
+      document.getElementById('autoReplyEnabled').checked = data.account.auto_reply_enabled;
+      document.getElementById('socialSettings').classList.remove('hidden');
+    }
+  }
+
+  async function saveSocial() {
+    const page_id = document.getElementById('pageId').value;
+    const ig_business_id = document.getElementById('igBusinessId').value;
+    const access_token = document.getElementById('accessToken').value;
+    if (!page_id || !access_token) return showMsg('socialMsg', 'Page ID болон Access Token заавал хэрэгтэй', false);
+    const res = await fetch(API + '/api/social/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ page_id, ig_business_id, access_token })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('socialMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('socialMsg', 'Холбогдлоо ✓', true);
+    await loadSocial();
+  }
+
+  async function saveSocialSettings() {
+    const trollguard_enabled = document.getElementById('trollguardEnabled').checked;
+    const auto_reply_enabled = document.getElementById('autoReplyEnabled').checked;
+    await fetch(API + '/api/social/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ trollguard_enabled, auto_reply_enabled })
+    });
+  }
+
+  // ---- Marketing: scheduled posts ----
+  async function loadPosts() {
+    const res = await fetch(API + '/api/marketing/posts', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = document.getElementById('postList');
+    list.innerHTML = '';
+    data.posts.forEach((p) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'font-size:13px;color:#ccc;padding:8px 0;border-top:1px solid #262626;display:flex;justify-content:space-between;gap:10px;';
+      const statusColor = p.status === 'posted' ? '#8affa0' : p.status === 'failed' ? '#ff8a8a' : '#ccc';
+      row.innerHTML = '<span>' + new Date(p.scheduled_at).toLocaleString() + ' — ' + escapeHtmlDash(p.caption).slice(0, 40) + '</span>' +
+        '<span style="color:' + statusColor + ';">' + p.status + '</span>';
+      list.appendChild(row);
+    });
+  }
+
+  function escapeHtmlDash(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+  async function schedulePost() {
+    const caption = document.getElementById('postCaption').value;
+    const media_url = document.getElementById('postMediaUrl').value;
+    const scheduledInput = document.getElementById('postScheduledAt').value;
+    if (!caption || !scheduledInput) return showMsg('postMsg', 'Текст болон огноо шаардлагатай', false);
+    const scheduled_at = new Date(scheduledInput).toISOString();
+    const res = await fetch(API + '/api/marketing/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ caption, media_url, scheduled_at })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('postMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('postMsg', 'Товлогдлоо ✓', true);
+    document.getElementById('postCaption').value = '';
+    document.getElementById('postMediaUrl').value = '';
+    await loadPosts();
+  }
+
+  // ---- Marketing: SMS ----
+  async function loadSms() {
+    const res = await fetch(API + '/api/marketing/sms', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = document.getElementById('smsList');
+    list.innerHTML = '';
+    data.logs.forEach((s) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'font-size:13px;color:#ccc;padding:8px 0;border-top:1px solid #262626;display:flex;justify-content:space-between;gap:10px;';
+      const statusColor = s.status === 'sent' ? '#8affa0' : s.status === 'failed' ? '#ff8a8a' : '#ccc';
+      row.innerHTML = '<span>' + s.phone + ' — ' + escapeHtmlDash(s.message).slice(0, 30) + '</span>' +
+        '<span style="color:' + statusColor + ';">' + s.status + '</span>';
+      list.appendChild(row);
+    });
+  }
+
+  async function sendSmsMsg() {
+    const phone = document.getElementById('smsPhone').value;
+    const message = document.getElementById('smsMessage').value;
+    if (!phone || !message) return showMsg('smsMsg', 'Дугаар болон зурвас шаардлагатай', false);
+    const res = await fetch(API + '/api/marketing/sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ phone, message })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('smsMsg', data.error || 'Илгээхэд алдаа гарлаа', false);
+    showMsg('smsMsg', 'Илгээгдлээ ✓', true);
+    document.getElementById('smsMessage').value = '';
+    await loadSms();
+  }
+
+  // ---- CRM: customers ----
+  async function loadCustomerStats() {
+    const res = await fetch(API + '/api/customers/stats', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const leadRow = data.stats.find((s) => s.status === 'lead');
+    const custRow = data.stats.find((s) => s.status === 'customer');
+    document.getElementById('leadCount').textContent = (leadRow ? leadRow.count : 0) + ' lead';
+    document.getElementById('customerCount').textContent = (custRow ? custRow.count : 0) + ' харилцагч';
+  }
+
+  async function loadCustomers() {
+    const q = document.getElementById('custSearch').value;
+    const res = await fetch(API + '/api/customers?q=' + encodeURIComponent(q), { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = document.getElementById('customerList');
+    list.innerHTML = '';
+    data.customers.forEach((c) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:10px 0;border-top:1px solid #262626;font-size:13px;';
+      const statusColor = c.status === 'customer' ? '#8affa0' : '#f5c76b';
+      row.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<strong>' + escapeHtmlDash(c.name) + '</strong>' +
+          '<span style="color:' + statusColor + ';">' + (c.status === 'customer' ? 'Харилцагч' : 'Lead') + '</span>' +
+        '</div>' +
+        '<div style="color:#999;margin-top:2px;">' + escapeHtmlDash(c.phone || '') + (c.email ? ' · ' + escapeHtmlDash(c.email) : '') + '</div>' +
+        (c.notes ? '<div style="color:#777;margin-top:4px;">' + escapeHtmlDash(c.notes) + '</div>' : '');
+
+      const actions = document.createElement('div');
+      actions.style.cssText = 'margin-top:6px;display:flex;gap:8px;';
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'secondary';
+      toggleBtn.style.cssText = 'margin-top:0;padding:5px 10px;font-size:12px;';
+      toggleBtn.textContent = c.status === 'customer' ? 'Lead болгох' : 'Харилцагч болгох';
+      toggleBtn.onclick = () => updateCustomerStatus(c.id, c.status === 'customer' ? 'lead' : 'customer');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'secondary';
+      delBtn.style.cssText = 'margin-top:0;padding:5px 10px;font-size:12px;';
+      delBtn.textContent = 'Устгах';
+      delBtn.onclick = () => deleteCustomer(c.id);
+      actions.appendChild(toggleBtn);
+      actions.appendChild(delBtn);
+      row.appendChild(actions);
+
+      list.appendChild(row);
+    });
+  }
+
+  async function addCustomer() {
+    const name = document.getElementById('custName').value;
+    const phone = document.getElementById('custPhone').value;
+    const email = document.getElementById('custEmail').value;
+    const status = document.getElementById('custStatus').value;
+    const notes = document.getElementById('custNotes').value;
+    if (!name) return showMsg('custMsg', 'Нэр шаардлагатай', false);
+    const res = await fetch(API + '/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ name, phone, email, status, notes })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('custMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('custMsg', 'Нэмэгдлээ ✓', true);
+    document.getElementById('custName').value = '';
+    document.getElementById('custPhone').value = '';
+    document.getElementById('custEmail').value = '';
+    document.getElementById('custNotes').value = '';
+    await loadCustomers();
+    await loadCustomerStats();
+  }
+
+  async function updateCustomerStatus(id, status) {
+    await fetch(API + '/api/customers/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ status })
+    });
+    await loadCustomers();
+    await loadCustomerStats();
+  }
+
+  async function deleteCustomer(id) {
+    await fetch(API + '/api/customers/' + id, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    await loadCustomers();
+    await loadCustomerStats();
+  }
+
+  // ---- Products ----
+  async function loadProducts() {
+    const res = await fetch(API + '/api/orders/products', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = document.getElementById('productList');
+    list.innerHTML = '';
+    data.products.forEach((p) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:10px 0;border-top:1px solid #262626;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;';
+      row.innerHTML =
+        '<div><strong>' + escapeHtmlDash(p.name) + '</strong> — ' + Number(p.price).toLocaleString() + '₮' +
+        (p.in_stock ? '' : ' <span style="color:#ff8a8a;">(дууссан)</span>') + '</div>';
+      const delBtn = document.createElement('button');
+      delBtn.className = 'secondary';
+      delBtn.style.cssText = 'margin-top:0;padding:5px 10px;font-size:12px;';
+      delBtn.textContent = 'Устгах';
+      delBtn.onclick = () => deleteProduct(p.id);
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  }
+
+  async function addProduct() {
+    const name = document.getElementById('prodName').value;
+    const price = document.getElementById('prodPrice').value;
+    const description = document.getElementById('prodDesc').value;
+    const image_url = document.getElementById('prodImage').value;
+    if (!name || !price) return showMsg('prodMsg', 'Нэр, үнэ шаардлагатай', false);
+    const res = await fetch(API + '/api/orders/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ name, price: Number(price), description, image_url })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('prodMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('prodMsg', 'Нэмэгдлээ ✓', true);
+    document.getElementById('prodName').value = '';
+    document.getElementById('prodPrice').value = '';
+    document.getElementById('prodDesc').value = '';
+    document.getElementById('prodImage').value = '';
+    await loadProducts();
+  }
+
+  async function deleteProduct(id) {
+    await fetch(API + '/api/orders/products/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+    await loadProducts();
+  }
+
+  // ---- Orders ----
+  async function loadOrders() {
+    const statsRes = await fetch(API + '/api/orders/stats', { headers: { Authorization: 'Bearer ' + token } });
+    if (statsRes.ok) {
+      const statsData = await statsRes.json();
+      const statsEl = document.getElementById('orderStats');
+      statsEl.innerHTML = '';
+      const labels = { new: 'Шинэ', confirmed: 'Баталгаажсан', preparing: 'Бэлтгэж буй', done: 'Дууссан', cancelled: 'Цуцалсан' };
+      statsData.stats.forEach((s) => {
+        const badge = document.createElement('span');
+        badge.className = 'plan-badge';
+        badge.textContent = (labels[s.status] || s.status) + ': ' + s.count;
+        statsEl.appendChild(badge);
+      });
+    }
+
+    const res = await fetch(API + '/api/orders', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = document.getElementById('orderList');
+    list.innerHTML = '';
+    const statusOptions = ['new', 'confirmed', 'preparing', 'done', 'cancelled'];
+    const labels = { new: 'Шинэ', confirmed: 'Баталгаажсан', preparing: 'Бэлтгэж буй', done: 'Дууссан', cancelled: 'Цуцалсан' };
+
+    data.orders.forEach((o) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:12px 0;border-top:1px solid #262626;font-size:13px;';
+      const itemsText = (o.items || []).map((i) => i.product_name + ' ×' + i.quantity).join(', ');
+      row.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<strong>' + escapeHtmlDash(o.customer_name) + '</strong>' +
+          '<span>' + Number(o.total_amount).toLocaleString() + '₮</span>' +
+        '</div>' +
+        '<div style="color:#999;margin-top:2px;">' + escapeHtmlDash(itemsText) + '</div>' +
+        (o.customer_phone ? '<div style="color:#777;margin-top:2px;">' + escapeHtmlDash(o.customer_phone) + '</div>' : '');
+
+      const select = document.createElement('select');
+      select.style.cssText = 'margin-top:8px;padding:6px 8px;border-radius:6px;border:1px solid #333;background:#0e0e0e;color:#fff;font-size:12px;';
+      statusOptions.forEach((s) => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = labels[s];
+        if (s === o.status) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.onchange = () => updateOrderStatus(o.id, select.value);
+      row.appendChild(select);
+
+      list.appendChild(row);
+    });
+  }
+
+  async function updateOrderStatus(id, status) {
+    await fetch(API + '/api/orders/' + id + '/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ status })
+    });
+    await loadOrders();
+  }
+
+  // ---- Analytics ----
+  async function loadAnalytics() {
+    const res = await fetch(API + '/api/analytics/summary', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById('statConversations').textContent = data.conversations_total;
+    document.getElementById('statMessages').textContent = data.messages_total;
+    document.getElementById('statOrders').textContent = data.orders_total;
+    document.getElementById('statRevenue').textContent = Number(data.orders_revenue).toLocaleString() + '₮';
+
+    // 14-day chat bar chart
+    const chartEl = document.getElementById('chatChart');
+    chartEl.innerHTML = '';
+    const days = [];
+    const today = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    const dailyMap = {};
+    data.conversations_daily.forEach((row) => {
+      dailyMap[new Date(row.day).toISOString().slice(0, 10)] = parseInt(row.count, 10);
+    });
+    const maxCount = Math.max(1, ...days.map((d) => dailyMap[d] || 0));
+    days.forEach((d) => {
+      const count = dailyMap[d] || 0;
+      const bar = document.createElement('div');
+      const heightPct = Math.max(4, (count / maxCount) * 100);
+      bar.style.cssText = 'flex:1;background:' + (count > 0 ? '#fff' : '#262626') + ';border-radius:3px 3px 0 0;height:' + heightPct + '%;';
+      bar.title = d + ': ' + count;
+      chartEl.appendChild(bar);
+    });
+
+    // Order status bars
+    const labels = { new: 'Шинэ', confirmed: 'Баталгаажсан', preparing: 'Бэлтгэж буй', done: 'Дууссан', cancelled: 'Цуцалсан' };
+    const orderStatusEl = document.getElementById('orderStatusBars');
+    orderStatusEl.innerHTML = '';
+    const maxOrderCount = Math.max(1, ...data.orders_by_status.map((s) => parseInt(s.count, 10)));
+    data.orders_by_status.forEach((s) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:12px;';
+      const pct = (parseInt(s.count, 10) / maxOrderCount) * 100;
+      row.innerHTML =
+        '<div style="width:90px;color:#aaa;">' + (labels[s.status] || s.status) + '</div>' +
+        '<div style="flex:1;background:#0e0e0e;border-radius:4px;overflow:hidden;height:14px;">' +
+          '<div style="width:' + pct + '%;background:#fff;height:100%;"></div>' +
+        '</div>' +
+        '<div style="width:30px;text-align:right;color:#ccc;">' + s.count + '</div>';
+      orderStatusEl.appendChild(row);
+    });
+    if (data.orders_by_status.length === 0) {
+      orderStatusEl.innerHTML = '<div style="color:#666;font-size:13px;">Захиалга алга байна.</div>';
+    }
+
+    // Comment classification
+    const commentLabels = { troll: 'Троль/спам (нуусан)', question: 'Асуулт (хариулсан)', positive: 'Эерэг' };
+    const commentEl = document.getElementById('commentStats');
+    if (data.comments_by_classification.length === 0) {
+      commentEl.innerHTML = '<div style="color:#666;">Коммент өгөгдөл алга байна.</div>';
+    } else {
+      commentEl.innerHTML = data.comments_by_classification
+        .map((c) => (commentLabels[c.classification] || c.classification) + ': <strong>' + c.count + '</strong>')
+        .join('<br/>');
+    }
+  }
 </script>
 </body>
 </html>

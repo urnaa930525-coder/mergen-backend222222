@@ -75,11 +75,19 @@
 
 **Анхаар:** зөвхөн өөрийн/тестийн акаунт дээр App Review-гүйгээр ажиллуулж болно. Бусад бизнест SaaS байдлаар зарахын тулд Meta-гийн App Review-г давж, `instagram_manage_comments` зэрэг эрхийг production горимд авах шаардлагатай (business verification + review хугацаа ~1-2 долоо хоног).
 
+## Захиалгын систем (Products + Orders)
+
+`orders.js`-д бүтээгдэхүүн болон захиалгын удирдлага:
+- `GET/POST/PUT/DELETE /api/orders/products` — бизнесийн бүтээгдэхүүн (нэр, үнэ, зураг, нөөцтэй эсэх)
+- `GET/POST /api/orders`, `PUT /api/orders/:id/status` — захиалга үүсгэх, төлөв солих (шинэ → баталгаажсан → бэлтгэж буй → дууссан/цуцалсан)
+- `GET /api/orders/public/:widgetKey/products`, `POST /api/orders/public/:widgetKey/orders` — нэвтрэлтгүй, chat widget эсвэл site builder-с шууд захиалга үүсгэхэд зориулсан public endpoint (ирээдүйд widget/site checkout урсгал холбоход бэлэн)
+
+Dashboard дээр бүтээгдэхүүн нэмэх, захиалгын жагсаалт харах, төлөв солих боломжтой.
+
 ## Дараагийн шатанд нэмж болох зүйлс
 
-- Дэлгүүр/QPay/Хүргэлтийн интеграци (chat-аар захиалга авах)
-- Social холболтын dashboard UI (одоогоор API бэлэн, frontend хэсэг дутуу)
-- Олон agent (business-д хэдэн agent) дэмжлэг
+- Widget/site builder-с шууд захиалга өгөх checkout урсгал (backend API бэлэн, frontend холболт дутуу)
+- QPay төлбөрийн интеграци
 - Файл (PDF/DOCX) оруулаад мэдлэгийн сан болгож хувиргах
 - Тусгай домэйн холбох (жишээ нь mergen.ai)
-- Тарифын төлбөрийн систем (QPay)
+- Тарифын төлбөрийн систем (upgrade урсгал)
