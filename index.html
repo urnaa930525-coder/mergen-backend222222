@@ -9,15 +9,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #16213a;
-    --ink-soft: #26314f;
-    --paper: #f4ecd8;
-    --paper-dim: #e8dcc0;
-    --brass: #b9873f;
-    --brass-deep: #8f661f;
-    --rust: #8a3a2c;
+    --ink: #0d3b3e;
+    --ink-soft: #1c5153;
+    --paper: #faf3e7;
+    --paper-dim: #f0e0c4;
+    --brass: #ff6f51;
+    --brass-deep: #c94f1e;
+    --mustard: #ffb830;
+    --mustard-deep: #9a6b0c;
+    --teal-tint: #d8eeec;
+    --teal-tint-deep: #0d5a5c;
+    --coral-tint: #ffe2d6;
+    --coral-tint-deep: #c94f1e;
+    --rust: #c23b2a;
     --text-dark: #201a12;
-    --text-dim: #5a5340;
+    --text-dim: #6b5a3f;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -36,23 +42,27 @@
   .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
   .nav-links a.plain { color: var(--text-dim); }
   .nav-links a.button {
-    background: var(--ink); color: var(--paper); padding: 10px 20px; border-radius: 3px; font-weight: 500;
+    background: var(--brass); color: #fff; padding: 10px 20px; border-radius: 3px; font-weight: 500;
   }
 
-  .hero { padding: 40px 6vw 90px; }
-  .hero-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; }
+  .hero { padding: 40px 6vw 90px; position: relative; overflow: hidden; }
+  .hero::before, .hero::after {
+    content: ''; position: absolute; border-radius: 50%; filter: blur(40px); z-index: 0; pointer-events: none;
+  }
+  .hero::before { width: 340px; height: 340px; background: var(--coral-tint); opacity: 0.55; top: -120px; right: 8%; }
+  .hero::after { width: 260px; height: 260px; background: var(--teal-tint); opacity: 0.6; bottom: -80px; left: -60px; }
+  .hero-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; position: relative; z-index: 1; }
   .hero h1 {
     font-size: clamp(34px, 4.6vw, 54px); line-height: 1.12; font-weight: 500; letter-spacing: -0.015em;
     max-width: 11.5em;
   }
   .hero .lede { margin-top: 22px; font-size: 17px; line-height: 1.6; color: var(--text-dim); max-width: 34em; }
   .hero .actions { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-  .btn-primary { background: var(--ink); color: var(--paper); padding: 14px 26px; border-radius: 3px; font-weight: 500; font-size: 15px; }
+  .btn-primary { background: var(--brass); color: #fff; padding: 14px 26px; border-radius: 3px; font-weight: 500; font-size: 15px; }
   .btn-ghost { color: var(--text-dark); padding: 14px 4px; font-weight: 500; font-size: 15px; border-bottom: 1px solid var(--text-dark); }
 
   .target-stage { position: relative; aspect-ratio: 1 / 1; max-width: 420px; margin: 0 auto; }
   .target-stage svg { width: 100%; height: 100%; overflow: visible; }
-  .ring { fill: none; stroke: var(--ink); }
   .orbit-label {
     position: absolute; font-size: 12px; color: var(--text-dim); background: var(--paper-dim);
     padding: 4px 10px; border-radius: 999px; white-space: nowrap;
@@ -71,8 +81,11 @@
 
   .stats-band { background: var(--ink); color: var(--paper); padding: 36px 6vw; }
   .stats-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  .stat .num { font-family: 'Fraunces', serif; font-size: 34px; color: var(--brass); font-weight: 500; }
-  .stat .label { margin-top: 4px; font-size: 13.5px; color: #c7ceda; }
+  .stat .num { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 500; }
+  .stat:nth-child(1) .num { color: var(--brass); }
+  .stat:nth-child(2) .num { color: var(--mustard); }
+  .stat:nth-child(3) .num { color: #5fd6cd; }
+  .stat .label { margin-top: 4px; font-size: 13.5px; color: #bfe3df; }
 
   .capabilities { padding: 100px 6vw 40px; }
   .cap-head { max-width: 1120px; margin: 0 auto 54px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: end; }
@@ -81,21 +94,25 @@
 
   .cap-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; }
   .cap-row {
-    padding: 26px 0; border-top: 1px solid #cdbf98; display: grid; grid-template-columns: 44px 1fr; gap: 18px;
+    padding: 26px 0; border-top: 1px solid #e3d2b4; display: grid; grid-template-columns: 44px 1fr; gap: 18px;
   }
-  .cap-grid .cap-row:nth-child(5),
-  .cap-grid .cap-row:nth-child(6) { border-bottom: 1px solid #cdbf98; }
-  .cap-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .cap-icon svg { width: 20px; height: 20px; stroke: var(--ink); fill: none; stroke-width: 1.4; }
+  .cap-grid .cap-row:last-child { border-bottom: 1px solid #e3d2b4; }
+  .cap-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--teal-tint); }
+  .cap-icon svg { width: 20px; height: 20px; stroke: var(--teal-tint-deep); fill: none; stroke-width: 1.4; }
+  .cap-row:nth-child(3n+2) .cap-icon { background: var(--coral-tint); }
+  .cap-row:nth-child(3n+2) .cap-icon svg { stroke: var(--coral-tint-deep); }
+  .cap-row:nth-child(3n+3) .cap-icon { background: #fdecc8; }
+  .cap-row:nth-child(3n+3) .cap-icon svg { stroke: var(--mustard-deep); }
   .cap-row h3 { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
   .cap-row p { font-size: 13.8px; line-height: 1.55; color: var(--text-dim); }
+  .cap-row.flag .cap-icon { background: #fbdcd6; }
   .cap-row.flag .cap-icon svg { stroke: var(--rust); }
   .cap-row.flag h3 { color: var(--rust); }
 
   .cta-band { background: var(--ink); color: var(--paper); padding: 90px 6vw; text-align: center; margin-top: 90px; }
   .cta-band h2 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 500; max-width: 15em; margin: 0 auto 18px; }
-  .cta-band p { color: #c7ceda; font-size: 15.5px; margin-bottom: 30px; }
-  .cta-band .btn-primary { background: var(--brass); color: var(--ink); }
+  .cta-band p { color: #bfe3df; font-size: 15.5px; margin-bottom: 30px; }
+  .cta-band .btn-primary { background: var(--mustard); color: var(--ink); }
 
   footer { padding: 30px 6vw; text-align: center; color: var(--text-dim); font-size: 13px; }
 
@@ -113,7 +130,7 @@
 
 <nav class="top">
   <div class="wordmark">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#16213a" stroke-width="1.3"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#16213a" stroke-width="1.3"/><circle cx="12" cy="12" r="1.4" fill="#16213a"/></svg>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#ff6f51" stroke-width="1.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#0d5a5c" stroke-width="1.4"/><circle cx="12" cy="12" r="1.6" fill="#ffb830"/></svg>
     Mergen
   </div>
   <div class="nav-links">
@@ -135,14 +152,14 @@
 
     <div class="target-stage">
       <svg viewBox="0 0 200 200">
-        <circle class="ring" cx="100" cy="100" r="94" stroke-width="1" opacity="0.35"/>
-        <circle class="ring" cx="100" cy="100" r="68" stroke-width="1" opacity="0.5"/>
-        <circle class="ring" cx="100" cy="100" r="42" stroke-width="1.2" opacity="0.7"/>
-        <circle cx="100" cy="100" r="16" fill="#b9873f"/>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#ff6f51" stroke-width="1.3" opacity="0.55"/>
+        <circle cx="100" cy="100" r="68" fill="none" stroke="#ffb830" stroke-width="1.4" opacity="0.65"/>
+        <circle cx="100" cy="100" r="42" fill="none" stroke="#0d5a5c" stroke-width="1.6" opacity="0.8"/>
+        <circle cx="100" cy="100" r="16" fill="#ff6f51"/>
         <g class="arrow-mark">
-          <line x1="36" y1="164" x2="94" y2="106" stroke="#16213a" stroke-width="2.4" stroke-linecap="round"/>
-          <path d="M94 106 L82 104 M94 106 L96 118" stroke="#16213a" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-          <path d="M36 164 L26 168 L30 158 Z" fill="#16213a"/>
+          <line x1="36" y1="164" x2="94" y2="106" stroke="#0d3b3e" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M94 106 L82 104 M94 106 L96 118" stroke="#0d3b3e" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <path d="M36 164 L26 168 L30 158 Z" fill="#0d3b3e"/>
         </g>
       </svg>
       <span class="orbit-label ol-1">24/7 ажиллана</span>
@@ -162,40 +179,24 @@
 
 <section class="capabilities" id="capabilities">
   <div class="cap-head">
-    <h2>Нэг платформ, зургаан үнэн зорилт</h2>
+    <h2>Нэг платформ, есөн үнэн зорилт</h2>
     <p>Гоёл чимэглэл биш — тус бүр өөрийн гэсэн ажлыг хийдэг хэрэгслүүд. Хэрэгтэйгээ асаагаад, шаардлагагүйгээ унтраана.</p>
   </div>
 
   <div class="cap-grid">
     <div class="cap-row">
-      <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-4 4V5z"/><circle cx="9" cy="10.5" r="0.6" fill="#16213a" stroke="none"/><circle cx="12" cy="10.5" r="0.6" fill="#16213a" stroke="none"/><circle cx="15" cy="10.5" r="0.6" fill="#16213a" stroke="none"/></svg></div>
+      <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-4 4V5z"/><circle cx="9" cy="10.5" r="0.6" fill="#0d3b3e" stroke="none"/><circle cx="12" cy="10.5" r="0.6" fill="#0d3b3e" stroke="none"/><circle cx="15" cy="10.5" r="0.6" fill="#0d3b3e" stroke="none"/></svg></div>
       <div>
-        <h3>Коммент автоматжуулалт</h3>
-        <p>Пост, reel, live дээрх коммент бүрийг унших, ойлгох, тохирсон хариулт бичих ажлыг AI гүйцэтгэнэ.</p>
+        <h3>AI чат туслах</h3>
+        <p>Таны бизнесийн мэдлэгийн санд тулгуурлан, аль ч хэл дээр 24/7 харилцагчид хариулна.</p>
       </div>
     </div>
 
     <div class="cap-row">
       <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L20 10l-4.5 3.3L16.8 19 12 15.9 7.2 19l1.3-5.7L4 10l5.8-1.8L12 3z"/></svg></div>
       <div>
-        <h3>Messenger туслах</h3>
-        <p>Instagram, Facebook Messenger дээр захиалга авч, асуултад хариулж, харилцагчийг алдалгүй дагаж мөрдөнө.</p>
-      </div>
-    </div>
-
-    <div class="cap-row">
-      <div class="cap-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.8l3.4 2"/></svg></div>
-      <div>
-        <h3>Шуурхай хариулт</h3>
-        <p>Загвар хариултаар түргэн шийддэг, AI огт хэрэггүй энгийн асуулт, хуваарь, цагийн мэдээлэлд зориулав.</p>
-      </div>
-    </div>
-
-    <div class="cap-row">
-      <div class="cap-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 12l2 2 4-4.5"/></svg></div>
-      <div>
-        <h3>QPay төлбөр</h3>
-        <p>Хэрэглэгч чат дотроосоо шууд төлбөрөө хийж, мөнгө таны дансанд шууд орж ирнэ — гар ажиллагаа хэрэггүй.</p>
+        <h3>Коммент автоматжуулалт</h3>
+        <p>Пост, reel, live дээрх коммент бүрийг унших, ойлгох, тохирсон хариулт бичих ажлыг AI гүйцэтгэнэ.</p>
       </div>
     </div>
 
@@ -208,10 +209,50 @@
     </div>
 
     <div class="cap-row">
+      <div class="cap-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="1"/><path d="M4 8h16"/><circle cx="8" cy="6" r="0.6" fill="#0d3b3e" stroke="none"/></svg></div>
+      <div>
+        <h3>Вэбсайт угсрагч</h3>
+        <p>Drag-and-drop засварлагчаар өөрийн энгийн сайтаа угсарч, шууд нийтлэнэ — код мэдэх шаардлагагүй.</p>
+      </div>
+    </div>
+
+    <div class="cap-row">
+      <div class="cap-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 9h16M9 13h6"/></svg></div>
+      <div>
+        <h3>Маркетинг автоматжуулалт</h3>
+        <p>Пост товлож, тогтоосон цагт нь Instagram/Facebook дээр автоматаар нийтэлнэ.</p>
+      </div>
+    </div>
+
+    <div class="cap-row">
+      <div class="cap-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
+      <div>
+        <h3>Харилцагчийн удирдлага</h3>
+        <p>Lead болон харилцагчдаа бүртгэж, төлвөөр нь ялгаж, дагаж мөрддөг энгийн CRM.</p>
+      </div>
+    </div>
+
+    <div class="cap-row">
       <div class="cap-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="0.5"/><rect x="13" y="4" width="7" height="7" rx="0.5"/><rect x="4" y="13" width="7" height="7" rx="0.5"/><rect x="13" y="13" width="7" height="7" rx="0.5"/></svg></div>
       <div>
-        <h3>Бүтээгдэхүүний удирдлага</h3>
-        <p>Бараа, үнэ, нөөцөө нэг дороос шинэчилж, AI-даа шууд мэдээлэл болгон дамжуулна.</p>
+        <h3>Захиалгын систем</h3>
+        <p>Бүтээгдэхүүнээ бүртгэж, ирсэн захиалгыг шинэ-бэлтгэж буй-дууссан гэж дараалуулан удирдана.</p>
+      </div>
+    </div>
+
+    <div class="cap-row">
+      <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+      <div>
+        <h3>Дата тайлан</h3>
+        <p>Харилцан яриа, захиалга, орлого, коммент статистикаа нэг дороос харна.</p>
+      </div>
+    </div>
+
+    <div class="cap-row">
+      <div class="cap-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 12l2 2 4-4.5"/></svg></div>
+      <div>
+        <h3>Олон agent, нэг данс</h3>
+        <p>Багцынхаа хэмжээгээр хэдэн agent зэрэг ажиллуулж, тус бүрийг өөр вэбсайт дээр суулгана.</p>
       </div>
     </div>
   </div>
