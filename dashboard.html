@@ -76,6 +76,19 @@
         <span class="plan-badge" id="planUsage">0 / 0 agent</span>
       </div>
       <div class="agent-list" id="agentList"></div>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #262626;">
+        <div style="font-size:13px;color:#aaa;margin-bottom:10px;">Багц шинэчлэх:</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="secondary" onclick="startUpgrade('start')">Start — 49,900₮</button>
+          <button class="secondary" onclick="startUpgrade('business')">Business — 129,900₮</button>
+          <button class="secondary" onclick="startUpgrade('enterprise')">Enterprise — 349,900₮</button>
+        </div>
+        <div id="qpayBox" class="hidden" style="margin-top:16px;text-align:center;background:#0e0e0e;border:1px solid #262626;border-radius:10px;padding:20px;">
+          <img id="qpayQr" style="max-width:220px;width:100%;border-radius:8px;background:#fff;padding:8px;" />
+          <div style="font-size:13px;color:#aaa;margin-top:10px;" id="qpayStatus">QPay апп-аараа уншуулж төлнө үү...</div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -135,15 +148,29 @@
 
     <div class="card">
       <h3>Коммент автоматжуулалт + TrollGuard</h3>
-      <p style="color:#aaa;font-size:14px;">Instagram/Facebook Page холбоод, коммент автоматжуулалтаа асаана уу. Утга авахын тулд эхлээд Meta Developer App үүсгэж, Page Access Token авах шаардлагатай.</p>
-      <label>Facebook Page ID</label>
-      <input type="text" id="pageId" placeholder="жишээ нь: 1234567890" />
-      <label>Instagram Business Account ID (сонголт)</label>
-      <input type="text" id="igBusinessId" placeholder="жишээ нь: 1789xxxxxxx" />
-      <label>Page Access Token</label>
-      <input type="text" id="accessToken" placeholder="EAAxxxxxxxxxxxx..." />
-      <button onclick="saveSocial()">Холбох</button>
-      <div id="socialMsg"></div>
+      <p style="color:#aaa;font-size:14px;">Facebook Page-ээ нэг товчоор холбоод, коммент автоматжуулалтаа асаана уу.</p>
+
+      <div id="socialNotConnected">
+        <button onclick="connectFacebook()">📘 Facebook-аар холбох</button>
+        <div id="socialMsg"></div>
+        <details style="margin-top:16px;">
+          <summary style="cursor:pointer;color:#999;font-size:13px;">Дэвшилтэт: гараар холбох</summary>
+          <div style="margin-top:12px;">
+            <label>Facebook Page ID</label>
+            <input type="text" id="pageId" placeholder="жишээ нь: 1234567890" />
+            <label>Instagram Business Account ID (сонголт)</label>
+            <input type="text" id="igBusinessId" placeholder="жишээ нь: 1789xxxxxxx" />
+            <label>Page Access Token</label>
+            <input type="text" id="accessToken" placeholder="EAAxxxxxxxxxxxx..." />
+            <button class="secondary" onclick="saveSocial()">Гараар холбох</button>
+          </div>
+        </details>
+      </div>
+
+      <div id="socialConnected" class="hidden">
+        <div class="msg ok" style="display:inline-block;">✓ Холбогдсон: <strong id="connectedPageName"></strong></div>
+        <button class="secondary" onclick="connectFacebook()" style="margin-left:8px;">Дахин холбох / өөр Page сонгох</button>
+      </div>
 
       <div id="socialSettings" class="hidden" style="margin-top:18px;padding-top:18px;border-top:1px solid #262626;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -319,6 +346,39 @@
     window._planData = data;
   }
 
+  let qpayPollTimer = null;
+
+  async function startUpgrade(plan) {
+    const res = await fetch(API + '/api/billing/create-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ plan })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      document.getElementById('qpayBox').classList.remove('hidden');
+      document.getElementById('qpayStatus').textContent = data.error || 'Алдаа гарлаа';
+      return;
+    }
+    document.getElementById('qpayBox').classList.remove('hidden');
+    document.getElementById('qpayQr').src = 'data:image/png;base64,' + data.qr_image;
+    document.getElementById('qpayStatus').textContent = 'QPay апп-аараа уншуулж төлнө үү...';
+
+    clearInterval(qpayPollTimer);
+    qpayPollTimer = setInterval(async () => {
+      const checkRes = await fetch(API + '/api/billing/check/' + data.invoice.id, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const checkData = await checkRes.json();
+      if (checkData.status === 'paid') {
+        clearInterval(qpayPollTimer);
+        document.getElementById('qpayStatus').textContent = 'Төлбөр амжилттай орлоо ✓';
+        await loadPlan();
+        setTimeout(() => document.getElementById('qpayBox').classList.add('hidden'), 2500);
+      }
+    }, 4000);
+  }
+
   async function loadAgents() {
     const res = await fetch(API + '/api/agent', { headers: { Authorization: 'Bearer ' + token } });
     const data = await res.json();
@@ -388,18 +448,48 @@
   }
 
   if (token) enterDashboard();
+  handleSocialQueryParams();
 
   async function loadSocial() {
     const res = await fetch(API + '/api/social', { headers: { Authorization: 'Bearer ' + token } });
     if (!res.ok) return;
     const data = await res.json();
     if (data.account) {
+      document.getElementById('socialNotConnected').classList.add('hidden');
+      document.getElementById('socialConnected').classList.remove('hidden');
+      document.getElementById('connectedPageName').textContent = data.account.page_name || data.account.page_id;
       document.getElementById('pageId').value = data.account.page_id || '';
       document.getElementById('igBusinessId').value = data.account.ig_business_id || '';
-      document.getElementById('accessToken').placeholder = 'Холбогдсон — солихын тулд шинэ token оруулна уу';
       document.getElementById('trollguardEnabled').checked = data.account.trollguard_enabled;
       document.getElementById('autoReplyEnabled').checked = data.account.auto_reply_enabled;
       document.getElementById('socialSettings').classList.remove('hidden');
+    } else {
+      document.getElementById('socialNotConnected').classList.remove('hidden');
+      document.getElementById('socialConnected').classList.add('hidden');
+      document.getElementById('socialSettings').classList.add('hidden');
+    }
+  }
+
+  function connectFacebook() {
+    window.location.href = '/oauth/facebook/connect?token=' + encodeURIComponent(token);
+  }
+
+  function handleSocialQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    const errorMessages = {
+      denied: 'Facebook зөвшөөрөл олгоогүй тул холбогдсонгүй.',
+      no_pages: 'Таны Facebook акаунт дээр удирддаг Page олдсонгүй. Эхлээд Facebook Page үүсгэнэ үү.',
+      missing_code: 'Холболт дутуу байна, дахин оролдоно уу.',
+      bad_state: 'Холболтын хугацаа дууссан байна, дахин оролдоно уу.',
+      server_error: 'Серверийн алдаа гарлаа, дахин оролдоно уу.',
+    };
+    if (params.get('social_connected')) {
+      showMsg('socialMsg', 'Амжилттай холбогдлоо ✓', true);
+    } else if (params.get('social_error')) {
+      showMsg('socialMsg', errorMessages[params.get('social_error')] || 'Алдаа гарлаа', false);
+    }
+    if (params.get('social_connected') || params.get('social_error')) {
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }
 

@@ -9,9 +9,9 @@ const pool = new Pool({
 
 // Plan definitions: agent-count based, unlimited usage within a plan.
 const PLANS = {
-  start: { label: 'Start', max_agents: 1 },
-  business: { label: 'Business', max_agents: 3 },
-  enterprise: { label: 'Enterprise', max_agents: 10 },
+  start: { label: 'Start', max_agents: 1, price: 49900 },
+  business: { label: 'Business', max_agents: 3, price: 129900 },
+  enterprise: { label: 'Enterprise', max_agents: 10, price: 349900 },
 };
 
 async function initDb() {
@@ -66,6 +66,7 @@ async function initDb() {
       business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
       platform TEXT NOT NULL DEFAULT 'instagram',
       page_id TEXT NOT NULL,
+      page_name TEXT,
       ig_business_id TEXT,
       access_token TEXT NOT NULL,
       trollguard_enabled BOOLEAN DEFAULT true,
@@ -73,6 +74,7 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  await pool.query(`ALTER TABLE social_accounts ADD COLUMN IF NOT EXISTS page_name TEXT;`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS comment_logs (
@@ -180,6 +182,20 @@ async function initDb() {
       product_name TEXT NOT NULL,
       price NUMERIC NOT NULL DEFAULT 0,
       quantity INTEGER NOT NULL DEFAULT 1
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS qpay_invoices (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      plan TEXT NOT NULL,
+      amount NUMERIC NOT NULL,
+      qpay_invoice_id TEXT,
+      qpay_sender_invoice_no TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT NOW(),
+      paid_at TIMESTAMP
     );
   `);
 

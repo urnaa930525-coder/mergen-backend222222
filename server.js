@@ -13,6 +13,8 @@ const marketingRoutes = require('./marketing');
 const customerRoutes = require('./customers');
 const orderRoutes = require('./orders');
 const analyticsRoutes = require('./analytics');
+const oauthRoutes = require('./oauth');
+const billingRoutes = require('./billing');
 const { renderSiteHtml } = require('./site');
 
 const app = express();
@@ -38,6 +40,8 @@ app.use('/api/marketing', marketingRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/oauth', oauthRoutes);
+app.use('/api/billing', billingRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
