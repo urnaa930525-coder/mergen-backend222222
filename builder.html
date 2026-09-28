@@ -83,6 +83,7 @@
     <div class="palette-item" onclick="addBlock('image')"><span class="ic">▧</span> Зураг</div>
     <div class="palette-item" onclick="addBlock('button')"><span class="ic">▭</span> Товч</div>
     <div class="palette-item" onclick="addBlock('divider')"><span class="ic">—</span> Зураас</div>
+    <div class="palette-item" onclick="addBlock('products')"><span class="ic">🛍</span> Дэлгүүр</div>
   </div>
 
   <div class="canvas-wrap">
@@ -222,6 +223,8 @@
         content.innerHTML = '<span class="blk-button">' + escapeHtml(b.content.text || 'Товч') + '</span>';
       } else if (b.type === 'divider') {
         content.innerHTML = '<hr class="blk-divider" />';
+      } else if (b.type === 'products') {
+        content.innerHTML = '<div style="background:#f6f1e4;border:1px dashed #cdbf98;border-radius:10px;padding:24px;text-align:center;color:#8a836c;font-size:13px;">🛍 Дэлгүүрийн блок — Захиалгын систем хэсэгт нэмсэн бүтээгдэхүүнүүд энд харагдана (нийтлэсний дараа)</div>';
       }
       wrap.appendChild(content);
       canvas.appendChild(wrap);
@@ -262,6 +265,7 @@
     if (b.type === 'image') { field('Зургийн URL', 'url'); field('Alt текст', 'alt'); }
     if (b.type === 'button') { field('Товчны текст', 'text'); field('Холбоос (URL)', 'url'); }
     if (b.type === 'divider') { const p = document.createElement('div'); p.className = 'empty-hint'; p.textContent = 'Тохиргоо шаардлагагүй.'; form.appendChild(p); }
+    if (b.type === 'products') { const p = document.createElement('div'); p.className = 'empty-hint'; p.textContent = 'Тохиргоо шаардлагагүй — Dashboard-ийн "Бүтээгдэхүүн" хэсэгт нэмсэн бараа автоматаар энд харагдана.'; form.appendChild(p); }
   }
 
   document.getElementById('canvas').onclick = () => { selectedId = null; renderCanvas(); renderInspector(); };

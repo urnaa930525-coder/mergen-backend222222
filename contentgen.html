@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Пост зураг үүсгэгч — Mergen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Fraunces:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d13; --card: #141a26; --line: #232a38;
+    --gold: #cfa24d; --ink: #f3efe6; --dim: #8d95a5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; min-height: 100vh; }
+  a { color: inherit; text-decoration: none; }
+  header.top { display: flex; justify-content: space-between; align-items: center; padding: 18px 6vw; border-bottom: 1px solid var(--line); }
+  .logo { font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 7px; }
+  header.top a.back { font-size: 13px; color: var(--dim); }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 40px 6vw 100px; }
+  .hero { text-align: center; margin-bottom: 30px; }
+  .hero h1 { font-size: clamp(24px, 4vw, 32px); font-weight: 800; margin-bottom: 10px; }
+  .hero p { color: var(--dim); font-size: 15px; }
+
+  .search-box { display: flex; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; }
+  .search-box textarea {
+    flex: 1; min-width: 240px; background: var(--card); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 12px; padding: 14px 16px; font-size: 14px; font-family: inherit; resize: none; min-height: 52px;
+  }
+  .search-box textarea:focus { outline: none; border-color: var(--gold); }
+  .search-box button {
+    background: var(--gold); color: #14100a; border: none; padding: 0 26px; border-radius: 12px;
+    font-weight: 700; font-size: 14px; cursor: pointer; min-height: 52px;
+  }
+  .search-box button:disabled { opacity: 0.5; cursor: default; }
+
+  .status { text-align: center; color: var(--dim); font-size: 14px; margin: 20px 0; display: none; }
+  .status.show { display: block; }
+
+  .stage { display: none; flex-direction: column; align-items: center; gap: 18px; }
+  .stage.show { display: flex; }
+  canvas { width: 100%; max-width: 420px; border-radius: 16px; border: 1px solid var(--line); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .actions button, .actions .btn-link {
+    background: var(--card); border: 1px solid var(--line); color: var(--ink); padding: 10px 18px;
+    border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .actions .primary { background: var(--gold); color: #14100a; border: none; }
+
+  .empty-hint { text-align: center; color: var(--dim); font-size: 14px; padding: 40px 20px; border: 1px dashed var(--line); border-radius: 14px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#cfa24d" stroke-width="1.6"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3fada3" stroke-width="1.6"/><circle cx="12" cy="12" r="1.8" fill="#c1573c"/></svg>
+    Mergen
+  </div>
+  <a class="back" href="/">← Нүүр хуудас</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Санаагаа зурагт пост болгоё</h1>
+    <p>Богино тайлбар бичээд, Instagram/Facebook-д тавих бэлэн зурган пост аваарай.</p>
+  </div>
+
+  <div class="search-box">
+    <textarea id="ideaInput" placeholder="Жишээ нь: энэ амралтын өдрүүдэд бүх бараанд 20% хямдрал">Энэ амралтын өдрүүдэд бүх бараанд 20% хямдрал</textarea>
+    <button id="generateBtn" onclick="generateContent()">Зураг үүсгэх</button>
+  </div>
+
+  <div class="status" id="statusEl"></div>
+
+  <div class="stage" id="stage">
+    <canvas id="posterCanvas" width="1080" height="1080"></canvas>
+    <div class="actions">
+      <button class="primary" onclick="scheduleThisPost()">📅 Шууд пост болгож товлох</button>
+      <button onclick="downloadImage()">PNG татах</button>
+      <button onclick="generateContent()">Дахин үүсгэх (өөр өнгө)</button>
+    </div>
+    <div id="scheduleMsg" style="font-size:12px;color:var(--dim);"></div>
+    <div style="max-width:420px;text-align:center;color:var(--dim);font-size:12px;margin-top:6px;">"Шууд пост болгож товлох" дарвал зургийг серверт хадгалаад, Dashboard-ийн пост товлолтын хэсэгт шууд шилжинэ.</div>
+  </div>
+
+  <div class="empty-hint" id="emptyHint">Дээрх талбарт постынхоо санааг бичээд, "Зураг үүсгэх" дарна уу.</div>
+</div>
+
+<script>
+  let lastResult = null;
+
+  async function generateContent() {
+    const idea = document.getElementById('ideaInput').value.trim();
+    if (!idea) return;
+    const btn = document.getElementById('generateBtn');
+    const status = document.getElementById('statusEl');
+    const stage = document.getElementById('stage');
+    const emptyHint = document.getElementById('emptyHint');
+
+    btn.disabled = true;
+    btn.textContent = 'Уншиж байна...';
+    status.className = 'status show';
+    status.textContent = 'AI зохиож байна...';
+    emptyHint.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/contentgen/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idea }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        status.textContent = data.error || 'Алдаа гарлаа';
+        return;
+      }
+      status.className = 'status';
+      lastResult = data;
+      drawPoster(data);
+      stage.className = 'stage show';
+    } catch (e) {
+      status.className = 'status show';
+      status.textContent = 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Зураг үүсгэх';
+    }
+  }
+
+  function drawPoster(data) {
+    const canvas = document.getElementById('posterCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // gradient background
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, data.palette.bg);
+    grad.addColorStop(1, shadeColor(data.palette.bg, -0.18));
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // soft decorative circle
+    ctx.beginPath();
+    ctx.arc(W * 0.85, H * 0.15, 220, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(W * 0.1, H * 0.9, 160, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fill();
+
+    ctx.fillStyle = data.palette.accent;
+    ctx.textAlign = 'center';
+
+    // headline (wrapped, auto-sized)
+    let fontSize = 92;
+    ctx.font = '800 ' + fontSize + 'px Inter, sans-serif';
+    let lines = wrapText(ctx, data.headline.toUpperCase(), W * 0.82);
+    while (lines.length > 3 && fontSize > 48) {
+      fontSize -= 6;
+      ctx.font = '800 ' + fontSize + 'px Inter, sans-serif';
+      lines = wrapText(ctx, data.headline.toUpperCase(), W * 0.82);
+    }
+    const lineHeight = fontSize * 1.12;
+    const startY = H / 2 - ((lines.length - 1) * lineHeight) / 2 - 30;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, W / 2, startY + i * lineHeight);
+    });
+
+    // subtext
+    ctx.font = '500 34px Inter, sans-serif';
+    ctx.globalAlpha = 0.88;
+    const subLines = wrapText(ctx, data.subtext, W * 0.7);
+    const subStartY = startY + lines.length * lineHeight + 20;
+    subLines.forEach((line, i) => {
+      ctx.fillText(line, W / 2, subStartY + i * 42);
+    });
+    ctx.globalAlpha = 1;
+
+    // small watermark
+    ctx.font = '600 22px Inter, sans-serif';
+    ctx.globalAlpha = 0.55;
+    ctx.fillText('Mergen AI-аар үүсгэсэн', W / 2, H - 50);
+    ctx.globalAlpha = 1;
+  }
+
+  function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let current = '';
+    words.forEach((word) => {
+      const test = current ? current + ' ' + word : word;
+      if (ctx.measureText(test).width > maxWidth && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = test;
+      }
+    });
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  function shadeColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    let r = (num >> 16) + Math.round(255 * percent);
+    let g = ((num >> 8) & 0x00ff) + Math.round(255 * percent);
+    let b = (num & 0x0000ff) + Math.round(255 * percent);
+    r = Math.min(255, Math.max(0, r));
+    g = Math.min(255, Math.max(0, g));
+    b = Math.min(255, Math.max(0, b));
+    return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+  }
+
+  function downloadImage() {
+    const canvas = document.getElementById('posterCanvas');
+    const link = document.createElement('a');
+    link.download = 'mergen-post.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  async function scheduleThisPost() {
+    const msgEl = document.getElementById('scheduleMsg');
+    msgEl.textContent = 'Зургийг серверт хадгалж байна...';
+    const canvas = document.getElementById('posterCanvas');
+    const dataUrl = canvas.toDataURL('image/png');
+
+    try {
+      const res = await fetch('/api/media/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: dataUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) { msgEl.textContent = data.error || 'Алдаа гарлаа'; return; }
+
+      const caption = lastResult ? (lastResult.headline + '\n' + lastResult.subtext) : '';
+      const params = new URLSearchParams({ media: data.url, caption: caption });
+      window.location.href = '/dashboard.html?' + params.toString() + '#marketingCard';
+    } catch (e) {
+      msgEl.textContent = 'Сүлжээний алдаа гарлаа.';
+    }
+  }
+
+  document.getElementById('ideaInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateContent(); }
+  });
+</script>
+</body>
+</html>

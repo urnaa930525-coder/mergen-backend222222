@@ -1,7 +1,7 @@
 const express = require('express');
 const { pool } = require('./db');
-const { callClaude } = require('./claude');
-const { requireAuth } = require('./authMiddleware');
+const { callClaude, recordTokenUsage, isOverTokenLimit } = require('./claude');
+const { requireAuth, requireOwner } = require('./authMiddleware');
 
 const router = express.Router();
 const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'mergen-verify-token';
@@ -9,7 +9,7 @@ const GRAPH_VERSION = 'v19.0';
 
 // ---- Business-side settings (dashboard) ----
 
-router.post('/connect', requireAuth, async (req, res) => {
+router.post('/connect', requireAuth, requireOwner, async (req, res) => {
   const { page_id, ig_business_id, access_token } = req.body;
   if (!page_id || !access_token) {
     return res.status(400).json({ error: 'page_id, access_token шаардлагатай' });
@@ -38,7 +38,7 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ account: result.rows[0] || null });
 });
 
-router.put('/settings', requireAuth, async (req, res) => {
+router.put('/settings', requireAuth, requireOwner, async (req, res) => {
   const { trollguard_enabled, auto_reply_enabled } = req.body;
   await pool.query(
     `UPDATE social_accounts SET
@@ -102,13 +102,16 @@ async function handleComment(igBusinessId, value) {
   const account = accountResult.rows[0];
   if (!account) return; // unregistered account, ignore
 
+  const limitCheck = await isOverTokenLimit(account.business_id);
+  if (limitCheck.over) return; // out of monthly AI quota — skip silently, comment stays as-is
+
   const agentResult = await pool.query(
     'SELECT * FROM agents WHERE business_id = $1 ORDER BY is_primary DESC, created_at ASC LIMIT 1',
     [account.business_id]
   );
   const agent = agentResult.rows[0] || {};
 
-  const classification = await classifyComment(text, agent.knowledge_base);
+  const classification = await classifyComment(account.business_id, text, agent.knowledge_base);
 
   let actionTaken = 'none';
   let replyText = null;
@@ -117,7 +120,7 @@ async function handleComment(igBusinessId, value) {
     await hideComment(commentId, account.access_token);
     actionTaken = 'hidden';
   } else if (classification === 'question' && account.auto_reply_enabled) {
-    replyText = await generateReply(text, agent.knowledge_base, agent.agent_name);
+    replyText = await generateReply(account.business_id, text, agent.knowledge_base, agent.agent_name);
     await replyToComment(commentId, replyText, account.access_token);
     actionTaken = 'replied';
   }
@@ -129,36 +132,39 @@ async function handleComment(igBusinessId, value) {
   );
 }
 
-async function classifyComment(text, knowledgeBase) {
+async function classifyComment(businessId, text, knowledgeBase) {
   const system = `Чи бол Instagram/Facebook коммент ангилагч. Өгөгдсөн коммент-ийг яг эдгээр 3 категорийн ЗӨВХӨН НЭГ үгээр ангилж хариул (өөр юу ч бичихгүй):
 - troll: доромжлол, спам, муу санаатай, зохисгүй үг, худал мэдээлэл тараах
 - question: жинхэнэ асуулт, тодруулга хэрэгтэй сэтгэгдэл
 - positive: эерэг, магтаал, урамшуулал, хариулт заавал биш сэтгэгдэл
 
 Зөвхөн нэг үг буц: troll, question, эсвэл positive.`;
-  const result = await callClaude({
+  const { text: result, usage } = await callClaude({
     system,
     messages: [{ role: 'user', content: text }],
     maxTokens: 10,
   });
+  await recordTokenUsage(businessId, usage.total);
   const cleaned = result.trim().toLowerCase();
   if (cleaned.includes('troll')) return 'troll';
   if (cleaned.includes('question')) return 'question';
   return 'positive';
 }
 
-async function generateReply(text, knowledgeBase, agentName) {
+async function generateReply(businessId, text, knowledgeBase, agentName) {
   const system = `Чи бол "${agentName || 'Mergen'}" нэртэй Instagram/Facebook-ийн AI хариулагч.
 Мэдлэгийн сан:
 ---
 ${knowledgeBase || '(хоосон)'}
 ---
 Хэрэглэгчийн коммент бичсэн хэлээр нь, товч (1-2 өгүүлбэр), эелдэг хариул.`;
-  return callClaude({
+  const { text: reply, usage } = await callClaude({
     system,
     messages: [{ role: 'user', content: text }],
     maxTokens: 200,
   });
+  await recordTokenUsage(businessId, usage.total);
+  return reply;
 }
 
 async function hideComment(commentId, accessToken) {

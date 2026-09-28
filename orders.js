@@ -50,7 +50,7 @@ router.delete('/products/:id', requirePlan, async (req, res) => {
 
 // ================= Orders =================
 
-router.get('/orders', requirePlan, async (req, res) => {
+router.get('/', requirePlan, async (req, res) => {
   const { status } = req.query;
   const params = [req.businessId];
   let where = 'business_id = $1';
@@ -76,7 +76,7 @@ router.get('/orders', requirePlan, async (req, res) => {
   res.json({ orders });
 });
 
-router.post('/orders', requirePlan, async (req, res) => {
+router.post('/', requirePlan, async (req, res) => {
   const { customer_name, customer_phone, notes, items } = req.body;
   if (!customer_name || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'customer_name, items (хамгийн багадаа 1) шаардлагатай' });
@@ -102,7 +102,7 @@ router.post('/orders', requirePlan, async (req, res) => {
   res.json({ order });
 });
 
-router.put('/orders/:id/status', requirePlan, async (req, res) => {
+router.put('/:id/status', requirePlan, async (req, res) => {
   const { status } = req.body;
   const allowed = ['new', 'confirmed', 'preparing', 'done', 'cancelled'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'status буруу байна' });
@@ -114,7 +114,7 @@ router.put('/orders/:id/status', requirePlan, async (req, res) => {
   res.json({ order: result.rows[0] });
 });
 
-router.get('/orders/stats', requirePlan, async (req, res) => {
+router.get('/stats', requirePlan, async (req, res) => {
   const result = await pool.query(
     `SELECT status, COUNT(*) AS count, COALESCE(SUM(total_amount),0) AS total
      FROM orders WHERE business_id = $1 GROUP BY status`,

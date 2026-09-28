@@ -1,6 +1,6 @@
 const express = require('express');
 const { pool } = require('./db');
-const { callClaude } = require('./claude');
+const { callClaude, recordTokenUsage, isOverTokenLimit } = require('./claude');
 
 const router = express.Router();
 
@@ -20,6 +20,14 @@ router.post('/:widgetKey', async (req, res) => {
     );
     const agent = agentResult.rows[0];
     if (!agent) return res.status(404).json({ error: 'Agent олдсонгүй' });
+
+    const limitCheck = await isOverTokenLimit(agent.business_id);
+    if (limitCheck.over) {
+      return res.status(200).json({
+        reply: 'Уучлаарай, энэ сарын AI хэрэглээний хязгаар дүүрсэн байна. Бизнес эзэнтэй холбогдоно уу.',
+        limit_reached: true,
+      });
+    }
 
     let convoResult = await pool.query(
       'SELECT id FROM conversations WHERE agent_id = $1 AND session_id = $2',
@@ -61,7 +69,8 @@ ${agent.knowledge_base || '(Мэдлэгийн сан хоосон байна �
       { role: 'user', content: message },
     ];
 
-    const reply = await callClaude({ system: systemPrompt, messages: history });
+    const { text: reply, usage } = await callClaude({ system: systemPrompt, messages: history });
+    await recordTokenUsage(agent.business_id, usage.total);
 
     await pool.query(
       'INSERT INTO messages (conversation_id, role, content) VALUES ($1, $2, $3)',

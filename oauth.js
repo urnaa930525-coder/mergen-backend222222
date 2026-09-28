@@ -18,7 +18,10 @@ router.get('/facebook/connect', (req, res) => {
   const { token } = req.query;
   if (!token) return res.status(400).send('Нэвтрээгүй байна.');
   try {
-    jwt.verify(token, JWT_SECRET); // just validate it belongs to a logged-in business
+    const payload = jwt.verify(token, JWT_SECRET);
+    if ((payload.role || 'owner') !== 'owner') {
+      return res.status(403).send('Энэ үйлдлийг зөвхөн эзэмшигч хийх боломжтой.');
+    }
   } catch (e) {
     return res.status(401).send('Token хүчингүй байна.');
   }
@@ -28,14 +31,20 @@ router.get('/facebook/connect', (req, res) => {
   }
 
   const redirectUri = `${getBaseUrl(req)}/oauth/facebook/callback`;
-  const scope = [
-    'pages_show_list',
-    'pages_read_engagement',
-    'pages_manage_engagement',
-    'business_management',
-    'instagram_basic',
-    'instagram_manage_comments',
-  ].join(',');
+  // Permissions requested at login. Override with META_SCOPES (comma-separated) to stage an App Review:
+  // e.g. submit comments+posting first, add the ads_* scopes only once they are approved.
+  const defaultScopes = [
+    'pages_show_list',          // list the Pages the user manages
+    'pages_read_engagement',    // read Page content/comments
+    'pages_manage_engagement',  // reply to / hide comments (TrollGuard, auto-reply)
+    'pages_manage_posts',       // publish scheduled posts to the Page
+    'business_management',      // list Pages owned through a Business Manager
+    'instagram_basic',          // read the linked Instagram professional account
+    'instagram_manage_comments',// reply to / hide Instagram comments
+    'ads_management',           // create the boost campaign
+    'ads_read',                 // read the user's ad accounts
+  ];
+  const scope = (process.env.META_SCOPES ? process.env.META_SCOPES.split(',').map((s) => s.trim()).filter(Boolean) : defaultScopes).join(',');
 
   const authUrl = `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?` +
     `client_id=${encodeURIComponent(process.env.FACEBOOK_APP_ID)}` +
@@ -102,8 +111,21 @@ router.get('/facebook/callback', async (req, res) => {
       return res.redirect(`${dashboardUrl}?social_error=no_pages`);
     }
 
+    // Fetch the user's ad accounts too, so scheduled posts can be boosted later.
+    // Not fatal if this fails or comes back empty — boosting is opt-in and can be added manually.
+    let adAccountId = null;
+    try {
+      const adRes = await fetch(
+        `https://graph.facebook.com/${GRAPH_VERSION}/me/adaccounts?fields=id,name,account_status&access_token=${encodeURIComponent(userToken)}`
+      );
+      const adData = await adRes.json();
+      if (adData.data && adData.data.length > 0) adAccountId = adData.data[0].id; // e.g. "act_123456789"
+    } catch (e) {
+      console.error('Ad account fetch failed (non-fatal):', e);
+    }
+
     if (pages.length === 1) {
-      await savePageConnection(businessId, pages[0]);
+      await savePageConnection(businessId, pages[0], adAccountId);
       return res.redirect(`${dashboardUrl}?social_connected=1`);
     }
 
@@ -112,7 +134,7 @@ router.get('/facebook/callback', async (req, res) => {
       .map((p) => `<a class="pick" href="/oauth/facebook/choose-page?state=${encodeURIComponent(state)}&page_id=${encodeURIComponent(p.id)}">${escapeHtml(p.name)}</a>`)
       .join('');
     global.__mergenPendingPages = global.__mergenPendingPages || {};
-    global.__mergenPendingPages[businessId] = pages;
+    global.__mergenPendingPages[businessId] = { pages, adAccountId };
 
     res.send(`<!DOCTYPE html><html lang="mn"><head><meta charset="UTF-8"><title>Page сонгох</title>
       <style>body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}
@@ -139,27 +161,27 @@ router.get('/facebook/choose-page', async (req, res) => {
     return res.redirect(`${dashboardUrl}?social_error=bad_state`);
   }
 
-  const pending = (global.__mergenPendingPages || {})[businessId] || [];
-  const page = pending.find((p) => p.id === page_id);
+  const pending = (global.__mergenPendingPages || {})[businessId];
+  const page = pending && pending.pages.find((p) => p.id === page_id);
   if (!page) return res.redirect(`${dashboardUrl}?social_error=page_not_found`);
 
-  await savePageConnection(businessId, page);
+  await savePageConnection(businessId, page, pending.adAccountId);
   delete global.__mergenPendingPages[businessId];
   res.redirect(`${dashboardUrl}?social_connected=1`);
 });
 
-async function savePageConnection(businessId, page) {
+async function savePageConnection(businessId, page, adAccountId) {
   const igId = page.instagram_business_account ? page.instagram_business_account.id : null;
   const existing = await pool.query('SELECT id FROM social_accounts WHERE business_id = $1', [businessId]);
   if (existing.rows.length > 0) {
     await pool.query(
-      `UPDATE social_accounts SET page_id=$1, page_name=$2, ig_business_id=$3, access_token=$4 WHERE business_id=$5`,
-      [page.id, page.name || null, igId, page.access_token, businessId]
+      `UPDATE social_accounts SET page_id=$1, page_name=$2, ig_business_id=$3, access_token=$4, ad_account_id=$5 WHERE business_id=$6`,
+      [page.id, page.name || null, igId, page.access_token, adAccountId, businessId]
     );
   } else {
     await pool.query(
-      `INSERT INTO social_accounts (business_id, page_id, page_name, ig_business_id, access_token) VALUES ($1,$2,$3,$4,$5)`,
-      [businessId, page.id, page.name || null, igId, page.access_token]
+      `INSERT INTO social_accounts (business_id, page_id, page_name, ig_business_id, access_token, ad_account_id) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [businessId, page.id, page.name || null, igId, page.access_token, adAccountId]
     );
   }
 }

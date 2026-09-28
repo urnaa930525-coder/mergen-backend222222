@@ -7,25 +7,31 @@ const pool = new Pool({
     : false,
 });
 
-// Plan definitions: agent-count based, unlimited usage within a plan.
+// Referral reward: 20% of the referred business's first payment, credited as ₮.
+// The referrer can optionally convert that ₮ credit into bonus AI tokens at this rate.
+const TOKEN_CONVERSION_RATE = 20; // tokens per ₮1 of credit
 // `features` gates access to CRM/orders/marketing/analytics per the pricing page.
+// `token_limit` caps real Claude API tokens (input+output combined) used per calendar month.
 const PLANS = {
   start: {
     label: 'Start',
     max_agents: 1,
     price: 49900,
+    token_limit: 300000,
     features: ['chat', 'comments', 'trollguard', 'site_builder'],
   },
   business: {
     label: 'Business',
     max_agents: 3,
     price: 129900,
+    token_limit: 1200000,
     features: ['chat', 'comments', 'trollguard', 'site_builder', 'orders', 'marketing', 'analytics'],
   },
   enterprise: {
     label: 'Enterprise',
     max_agents: 10,
     price: 349900,
+    token_limit: 5000000,
     features: ['chat', 'comments', 'trollguard', 'site_builder', 'orders', 'marketing', 'analytics', 'crm'],
   },
 };
@@ -38,9 +44,18 @@ async function initDb() {
       password_hash TEXT NOT NULL,
       business_name TEXT NOT NULL,
       plan TEXT NOT NULL DEFAULT 'start',
+      referral_code TEXT UNIQUE,
+      referred_by INTEGER REFERENCES businesses(id),
+      credit_balance NUMERIC NOT NULL DEFAULT 0,
+      bonus_tokens BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  // Safe additive migration for deployments where `businesses` already existed before these columns were added.
+  await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS referral_code TEXT;`);
+  await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS referred_by INTEGER REFERENCES businesses(id);`);
+  await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS credit_balance NUMERIC NOT NULL DEFAULT 0;`);
+  await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS bonus_tokens BIGINT NOT NULL DEFAULT 0;`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agents (
@@ -84,6 +99,7 @@ async function initDb() {
       page_id TEXT NOT NULL,
       page_name TEXT,
       ig_business_id TEXT,
+      ad_account_id TEXT,
       access_token TEXT NOT NULL,
       trollguard_enabled BOOLEAN DEFAULT true,
       auto_reply_enabled BOOLEAN DEFAULT true,
@@ -91,6 +107,7 @@ async function initDb() {
     );
   `);
   await pool.query(`ALTER TABLE social_accounts ADD COLUMN IF NOT EXISTS page_name TEXT;`);
+  await pool.query(`ALTER TABLE social_accounts ADD COLUMN IF NOT EXISTS ad_account_id TEXT;`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS comment_logs (
@@ -134,9 +151,21 @@ async function initDb() {
       scheduled_at TIMESTAMP NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
       error TEXT,
+      fb_post_id TEXT,
+      boost_enabled BOOLEAN DEFAULT false,
+      boost_budget NUMERIC,
+      boost_duration_days INTEGER DEFAULT 3,
+      boost_campaign_id TEXT,
+      boost_status TEXT DEFAULT 'none',
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS fb_post_id TEXT;`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS boost_enabled BOOLEAN DEFAULT false;`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS boost_budget NUMERIC;`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS boost_duration_days INTEGER DEFAULT 3;`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS boost_campaign_id TEXT;`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS boost_status TEXT DEFAULT 'none';`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sms_logs (
@@ -209,13 +238,45 @@ async function initDb() {
       amount NUMERIC NOT NULL,
       qpay_invoice_id TEXT,
       qpay_sender_invoice_no TEXT,
+      credit_applied NUMERIC NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT NOW(),
       paid_at TIMESTAMP
+    );
+  `);
+  await pool.query(`ALTER TABLE qpay_invoices ADD COLUMN IF NOT EXISTS credit_applied NUMERIC NOT NULL DEFAULT 0;`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS token_usage (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      year_month TEXT NOT NULL,
+      tokens_used BIGINT NOT NULL DEFAULT 0,
+      UNIQUE (business_id, year_month)
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS team_members (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS generated_media (
+      id SERIAL PRIMARY KEY,
+      image_data BYTEA NOT NULL,
+      mime_type TEXT NOT NULL DEFAULT 'image/png',
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `);
 
   console.log('Database schema ready.');
 }
 
-module.exports = { pool, initDb, PLANS };
+module.exports = { pool, initDb, PLANS, TOKEN_CONVERSION_RATE };

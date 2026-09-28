@@ -15,6 +15,11 @@ const orderRoutes = require('./orders');
 const analyticsRoutes = require('./analytics');
 const oauthRoutes = require('./oauth');
 const billingRoutes = require('./billing');
+const teamRoutes = require('./team');
+const templateRoutes = require('./templates');
+const namegenRoutes = require('./namegen');
+const contentgenRoutes = require('./contentgen');
+const mediaRoutes = require('./media');
 const { renderSiteHtml } = require('./site');
 
 const app = express();
@@ -26,6 +31,12 @@ app.use(express.json());
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 app.get('/builder.html', (req, res) => res.sendFile(path.join(__dirname, 'builder.html')));
+app.get('/namegen.html', (req, res) => res.sendFile(path.join(__dirname, 'namegen.html')));
+app.get('/contentgen.html', (req, res) => res.sendFile(path.join(__dirname, 'contentgen.html')));
+app.get('/hero-woman.jpg', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, 'hero-woman.jpg'));
+});
 app.get('/widget.js', (req, res) => {
   res.type('application/javascript');
   res.sendFile(path.join(__dirname, 'widget.js'));
@@ -42,6 +53,11 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/oauth', oauthRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/templates', templateRoutes);
+app.use('/api/namegen', namegenRoutes);
+app.use('/api/contentgen', contentgenRoutes);
+app.use('/api/media', mediaRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

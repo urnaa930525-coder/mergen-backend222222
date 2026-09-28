@@ -2,19 +2,29 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { pool, PLANS } = require('./db');
 const { requireAuth } = require('./authMiddleware');
+const { currentYearMonth } = require('./claude');
 
 const router = express.Router();
 
 // ---- Plan info ----
 router.get('/plan', requireAuth, async (req, res) => {
-  const bizResult = await pool.query('SELECT plan FROM businesses WHERE id = $1', [req.businessId]);
+  const bizResult = await pool.query('SELECT plan, referral_code, credit_balance, bonus_tokens FROM businesses WHERE id = $1', [req.businessId]);
   const plan = bizResult.rows[0].plan;
   const countResult = await pool.query('SELECT COUNT(*) FROM agents WHERE business_id = $1', [req.businessId]);
+  const usageResult = await pool.query(
+    'SELECT tokens_used FROM token_usage WHERE business_id = $1 AND year_month = $2',
+    [req.businessId, currentYearMonth()]
+  );
   res.json({
     plan,
     plan_label: (PLANS[plan] || PLANS.start).label,
     max_agents: (PLANS[plan] || PLANS.start).max_agents,
     agents_used: parseInt(countResult.rows[0].count, 10),
+    token_limit: (PLANS[plan] || PLANS.start).token_limit,
+    tokens_used: usageResult.rows[0] ? parseInt(usageResult.rows[0].tokens_used, 10) : 0,
+    referral_code: bizResult.rows[0].referral_code,
+    credit_balance: Number(bizResult.rows[0].credit_balance) || 0,
+    bonus_tokens: Number(bizResult.rows[0].bonus_tokens) || 0,
     all_plans: PLANS,
   });
 });

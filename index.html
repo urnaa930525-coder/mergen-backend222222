@@ -9,117 +9,139 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --coral: #ff6f51;
-    --coral-deep: #e14a2c;
-    --teal: #0d5a5c;
-    --mustard: #ffb830;
-    --ink: #14171f;
-    --dim: #6b7280;
-    --line: #e9e9ec;
-    --card: #faf9f7;
+    --bg: #ffffff;
+    --soft: #eef6fd;
+    --card: #ffffff;
+    --ink: #14213d;
+    --dim: #5b6b82;
+    --line: #e2edf7;
+    --blue: #2f8fe0;
+    --blue-deep: #1f74bd;
+    --blue-tint: #e3f1fd;
+    --orange: #ff9a5a;
+    --orange-tint: #fff0e4;
+    --coral: #e8564a;
+    --green: #3aa86a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: var(--ink); line-height: 1.6; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; }
   a { color: inherit; text-decoration: none; }
-  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 6vw; }
   section { padding: 80px 6vw; }
   h1, h2, h3 { font-weight: 800; letter-spacing: -0.02em; }
 
   /* nav */
-  nav.top { position: sticky; top: 0; background: #fffffff2; backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); z-index: 50; }
-  .nav-inner { max-width: 1160px; margin: 0 auto; padding: 16px 6vw; display: flex; align-items: center; justify-content: space-between; }
+  nav.top { position: sticky; top: 0; background: rgba(255,255,255,0.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); z-index: 50; }
+  .nav-inner { max-width: 1160px; margin: 0 auto; padding: 14px 6vw; display: flex; align-items: center; justify-content: space-between; }
   .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; }
-  .nav-links { display: flex; align-items: center; gap: 26px; font-size: 14px; color: var(--dim); }
-  .nav-links a:hover { color: var(--ink); }
-  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px 22px; border-radius: 10px; font-weight: 600; font-size: 14px; }
-  .btn-primary { background: var(--coral); color: #fff; }
-  .btn-primary:hover { background: var(--coral-deep); }
-  .btn-ghost { border: 1px solid var(--line); color: var(--ink); }
+  .nav-links { display: flex; align-items: center; gap: 26px; font-size: 14px; color: var(--dim); font-weight: 500; }
+  .nav-links a:hover { color: var(--blue); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; transition: background .15s, transform .15s; }
+  .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 10px 24px -12px rgba(47,143,224,0.7); }
+  .btn-primary:hover { background: var(--blue-deep); transform: translateY(-1px); }
+  .btn-ghost { border: 1.5px solid var(--blue); color: var(--blue); background: #fff; }
+  .btn-ghost:hover { background: var(--blue-tint); }
 
   /* hero */
-  .eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral); background: #fff1ec; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; }
-  .hero { padding-top: 70px; padding-bottom: 30px; text-align: center; }
-  .hero h1 { font-size: clamp(32px, 5vw, 56px); line-height: 1.12; max-width: 16em; margin: 0 auto 20px; }
-  .hero p { color: var(--dim); font-size: 17px; max-width: 34em; margin: 0 auto 30px; }
-  .hero .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero { position: relative; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, var(--soft) 100%); padding: 56px 6vw 70px; }
+  .hero::before { content: ''; position: absolute; width: 26px; height: 26px; border-radius: 50%; background: var(--orange); top: 90px; left: 46%; opacity: .9; }
+  .hero::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--blue); bottom: 60px; left: 8%; opacity: .55; }
+  .hero-grid { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; }
+  .eyebrow { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--blue); background: var(--blue-tint); padding: 6px 14px; border-radius: 999px; margin-bottom: 18px; }
+  .hero h1 { font-size: clamp(32px, 4.8vw, 54px); line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 span { color: var(--blue); }
+  .hero-text p { color: var(--dim); font-size: 17px; max-width: 30em; margin-bottom: 28px; }
+  .hero .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .hero-note { margin-top: 22px; font-size: 13px; color: var(--dim); display: flex; align-items: center; gap: 8px; }
+  .hero-note .stars { color: var(--orange); letter-spacing: 2px; }
 
-  /* mockup */
-  .mockup-stage { position: relative; max-width: 760px; margin: 64px auto 0; }
-  .mockup-frame { background: linear-gradient(160deg, #17202b, #0c1117); border-radius: 26px; padding: 14px; box-shadow: 0 40px 80px -30px rgba(20,23,31,0.35); }
-  .mockup-screen { background: #fff; border-radius: 16px; overflow: hidden; }
-  .mockup-topbar { display: flex; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-  .mockup-topbar span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
-  .mockup-chat { padding: 22px 24px 30px; }
-  .mockup-bubble { max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: 13px; margin-bottom: 10px; }
-  .mockup-bubble.bot { background: #f2f1ee; color: var(--ink); border-bottom-left-radius: 4px; }
-  .mockup-bubble.user { background: var(--ink); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
-  .chip { position: absolute; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: 12.5px; font-weight: 600; box-shadow: 0 14px 30px -14px rgba(20,23,31,0.25); display: flex; align-items: center; gap: 8px; }
-  .chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .chip-1 { top: 6%; left: -6%; }
-  .chip-2 { top: 26%; right: -8%; }
-  .chip-3 { bottom: 20%; left: -9%; }
-  .chip-4 { bottom: 2%; right: -4%; }
+  .hero-visual { position: relative; max-width: 430px; margin: 0 auto; width: 100%; }
+  .hero-blob { position: absolute; inset: 8% -8% -4% 12%; background: #d3e8fa; border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%; }
+  .hero-photo { position: relative; display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: center top; border-radius: 28px; box-shadow: 0 30px 60px -28px rgba(20,33,61,0.45); }
+  .chip { position: absolute; background: #fff; border-radius: 14px; padding: 10px 14px; font-size: 12.5px; font-weight: 700; box-shadow: 0 16px 34px -16px rgba(20,33,61,0.35); display: flex; align-items: center; gap: 8px; color: var(--ink); z-index: 2; }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .chip-1 { top: 8%; left: -12%; }
+  .chip-2 { top: 34%; right: -10%; }
+  .chip-3 { bottom: 26%; left: -14%; }
+  .chat-card { position: absolute; bottom: 4%; right: -8%; width: 190px; background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 20px 40px -18px rgba(20,33,61,0.4); z-index: 2; }
+  .chat-card .head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; margin-bottom: 8px; }
+  .chat-card .head i { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
+  .chat-card .bubble { background: var(--blue-tint); color: var(--ink); font-size: 11.5px; padding: 8px 10px; border-radius: 12px; border-bottom-left-radius: 3px; line-height: 1.4; }
+
+  /* trusted band */
+  .trusted { background: var(--soft); text-align: center; padding: 28px 6vw; border-top: 1px solid var(--line); }
+  .trusted .cap { font-size: 12.5px; color: var(--dim); margin-bottom: 12px; font-weight: 600; }
+  .trusted .row { display: flex; justify-content: center; gap: 46px; flex-wrap: wrap; font-weight: 800; font-size: 19px; color: #33465f; opacity: .85; }
 
   /* feature grid */
   .section-head { text-align: center; max-width: 620px; margin: 0 auto 50px; }
+  .section-head .kicker { display: block; font-size: 12.5px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
   .section-head h2 { font-size: clamp(26px, 3vw, 36px); margin-bottom: 12px; }
   .section-head p { color: var(--dim); font-size: 15.5px; }
   .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1160px; margin: 0 auto; }
-  .feature-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; }
-  .feature-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-  .feature-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.6; }
+  .feature-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px; box-shadow: 0 14px 30px -24px rgba(20,33,61,0.3); transition: transform .2s, box-shadow .2s; }
+  .feature-card:hover { transform: translateY(-3px); box-shadow: 0 22px 40px -24px rgba(47,143,224,0.45); }
+  .feature-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .feature-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.7; }
   .feature-card h3 { font-size: 16px; margin-bottom: 8px; }
   .feature-card p { font-size: 13.5px; color: var(--dim); line-height: 1.55; }
-  .feature-card.flag { border-color: #ffd9cf; background: #fff6f3; }
+  .feature-card.flag { border-color: #ffd6d1; background: #fff7f6; }
 
   /* stats */
-  .stats-band { background: var(--ink); color: #fff; border-radius: 24px; max-width: 1160px; margin: 0 auto; padding: 44px 6vw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: center; }
-  .stats-band .num { font-size: 30px; font-weight: 800; }
-  .stats-band .label { font-size: 13px; color: #a8adba; margin-top: 6px; }
+  .stats-band { background: linear-gradient(135deg, #2f8fe0, #56b0f2); color: #fff; border-radius: 26px; max-width: 1160px; margin: 0 auto; padding: 44px 6vw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: center; }
+  .stats-band .num { font-size: 32px; font-weight: 800; }
+  .stats-band .label { font-size: 13.5px; color: rgba(255,255,255,0.88); margin-top: 6px; }
 
   /* pricing */
+  #pricing { background: var(--soft); }
   .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; }
-  .price-card { border: 1px solid var(--line); border-radius: 18px; padding: 30px 26px; position: relative; }
-  .price-card.popular { border-color: var(--coral); box-shadow: 0 20px 50px -24px rgba(255,111,81,0.4); }
-  .price-card .badge { position: absolute; top: -13px; left: 26px; background: var(--coral); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
+  .price-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 30px 26px; position: relative; }
+  .price-card.popular { border: 2px solid var(--blue); box-shadow: 0 26px 50px -26px rgba(47,143,224,0.55); }
+  .price-card .badge { position: absolute; top: -13px; left: 26px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
   .price-card h3 { font-size: 18px; margin-bottom: 6px; }
   .price-card .desc { font-size: 13px; color: var(--dim); margin-bottom: 18px; min-height: 34px; }
-  .price-card .amount { font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+  .price-card .amount { font-size: 32px; font-weight: 800; margin-bottom: 4px; color: var(--ink); }
   .price-card .amount span { font-size: 14px; font-weight: 500; color: var(--dim); }
   .price-card .btn { width: 100%; margin: 18px 0 22px; }
   .price-card ul { list-style: none; font-size: 13.5px; color: var(--ink); }
   .price-card li { padding: 7px 0; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-start; }
-  .price-card li svg { width: 15px; height: 15px; stroke: var(--coral); flex-shrink: 0; margin-top: 2px; }
-  .price-card li.off { color: #b6bac2; }
-  .price-card li.off svg { stroke: #d8dae0; }
+  .price-card li svg { width: 15px; height: 15px; stroke: var(--blue); flex-shrink: 0; margin-top: 2px; fill: none; stroke-width: 2.2; }
+  .price-card li.off { color: #a9b6c7; }
+  .price-card li.off svg { stroke: #ccd6e2; }
   .price-card .included-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
 
   /* faq */
   .faq { max-width: 760px; margin: 0 auto; }
   details { border-top: 1px solid var(--line); padding: 18px 0; }
   details:last-child { border-bottom: 1px solid var(--line); }
-  summary { cursor: pointer; font-weight: 600; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: '+'; font-size: 20px; color: var(--dim); font-weight: 400; }
+  summary::after { content: '+'; font-size: 22px; color: var(--blue); font-weight: 400; }
   details[open] summary::after { content: '−'; }
   details p { color: var(--dim); font-size: 14px; margin-top: 12px; line-height: 1.6; }
 
   /* cta + footer */
-  .cta-band { text-align: center; background: linear-gradient(135deg, #fff1ec, #fff8ee); border-radius: 24px; max-width: 1160px; margin: 0 auto; padding: 70px 6vw; }
+  .cta-band { text-align: center; background: linear-gradient(135deg, #2f8fe0, #4aa8f0); border-radius: 26px; max-width: 1160px; margin: 0 auto 70px; padding: 70px 6vw; color: #fff; }
   .cta-band h2 { font-size: clamp(26px, 3.2vw, 36px); margin-bottom: 14px; }
-  .cta-band p { color: var(--dim); margin-bottom: 26px; }
+  .cta-band p { color: rgba(255,255,255,0.9); margin-bottom: 26px; }
+  .cta-band .btn-primary { background: #fff; color: var(--blue); box-shadow: none; }
+  .cta-band .btn-primary:hover { background: var(--blue-tint); }
   footer { border-top: 1px solid var(--line); padding: 40px 6vw; text-align: center; color: var(--dim); font-size: 13px; }
 
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-visual { max-width: 340px; margin-top: 10px; }
+    .chip-1 { left: -4%; } .chip-2 { right: -4%; } .chip-3 { left: -4%; }
+    .chat-card { right: -2%; width: 170px; }
     .feature-grid { grid-template-columns: 1fr 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
     .stats-band { grid-template-columns: 1fr; }
-    .chip { position: static; margin: 8px auto; width: fit-content; }
-    .mockup-stage { padding: 0 10px; }
+    .nav-links { display: none; }
+    .hero::before { top: 22px; left: auto; right: 9%; width: 18px; height: 18px; }
   }
   @media (max-width: 560px) {
     .feature-grid { grid-template-columns: 1fr; }
+    .trusted .row { gap: 26px; font-size: 16px; }
   }
 </style>
 </head>
@@ -128,10 +150,12 @@
 <nav class="top">
   <div class="nav-inner">
     <div class="logo">
-      <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#ff6f51" stroke-width="1.6"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#0d5a5c" stroke-width="1.6"/><circle cx="12" cy="12" r="1.8" fill="#ffb830"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#ff9a5a" stroke-width="1.6"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#2f8fe0" stroke-width="1.6"/><circle cx="12" cy="12" r="1.8" fill="#ff9a5a"/></svg>
       Mergen
     </div>
     <div class="nav-links">
+      <a href="/namegen.html">Нэр+Лого AI</a>
+      <a href="/contentgen.html">Пост зураг AI</a>
       <a href="#features">Боломжууд</a>
       <a href="#pricing">Үнэ</a>
       <a href="#faq">Асуулт хариулт</a>
@@ -141,80 +165,86 @@
 </nav>
 
 <section class="hero">
-  <span class="eyebrow">AI · SaaS · Автоматжуулалт</span>
-  <h1>Facebook, Instagram-даа зориулсан AI Agent</h1>
-  <p>Коммент, чат, захиалга бүрийг автоматаар боловсруулдаг AI платформ. Танай мэдлэгээс гардаггүй, хэзээ ч амардаггүй.</p>
-  <div class="actions">
-    <a class="btn btn-primary" href="/dashboard.html">Одоо эхлэх</a>
-    <a class="btn btn-ghost" href="#features">Боломжуудыг харах</a>
-  </div>
+  <div class="hero-grid">
+    <div class="hero-text">
+      <span class="eyebrow">AI · SaaS · Автоматжуулалт</span>
+      <h1>Facebook, Instagram-даа зориулсан <span>AI Agent</span></h1>
+      <p>Коммент, чат, захиалга бүрийг автоматаар боловсруулдаг AI платформ. Танай мэдлэгээс гардаггүй, хэзээ ч амардаггүй.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/dashboard.html">Одоо эхлэх</a>
+        <a class="btn btn-ghost" href="#features">Боломжуудыг харах</a>
+      </div>
+      <div class="hero-note">Facebook, Instagram, QPay-тай шууд холбогдоно</div>
+    </div>
 
-  <div class="mockup-stage">
-    <div class="mockup-frame">
-      <div class="mockup-screen">
-        <div class="mockup-topbar"><span></span><span></span><span></span></div>
-        <div class="mockup-chat">
-          <div class="mockup-bubble bot">Сайн байна уу! Танд юугаар туслах вэ? 👋</div>
-          <div class="mockup-bubble user">1 сарын багц хэд вэ?</div>
-          <div class="mockup-bubble bot">1 сарын багц 12,900₮ байна! 🎉 Өөр асуух зүйл байна уу?</div>
-        </div>
+    <div class="hero-visual">
+      <div class="hero-blob"></div>
+      <img class="hero-photo" src="/hero-woman.jpg" alt="Бизнес эрхлэгч эмэгтэй (жишээ дүрслэл)" width="736" height="1104" />
+      <div class="chip chip-1"><span class="dot" style="background:var(--blue);"></span>Коммент автоматжуулалт</div>
+      <div class="chip chip-2"><span class="dot" style="background:var(--green);"></span>24/7 ажиллана</div>
+      <div class="chip chip-3"><span class="dot" style="background:var(--orange);"></span>Захиалгын систем</div>
+      <div class="chat-card">
+        <div class="head"><i></i>Mergen AI</div>
+        <div class="bubble">Сайн байна уу! Танд юугаар туслах вэ? 👋</div>
       </div>
     </div>
-    <div class="chip chip-1"><span class="dot" style="background:var(--coral);"></span>Коммент автоматжуулалт</div>
-    <div class="chip chip-2"><span class="dot" style="background:var(--teal);"></span>Мэдлэгийн сан</div>
-    <div class="chip chip-3"><span class="dot" style="background:var(--mustard);"></span>Захиалгын систем</div>
-    <div class="chip chip-4"><span class="dot" style="background:#e14a2c;"></span>TrollGuard</div>
   </div>
 </section>
 
+<div class="trusted">
+  <div class="cap">Холбогддог платформууд</div>
+  <div class="row"><span>Facebook</span><span>Instagram</span><span>QPay</span></div>
+</div>
+
 <section id="features">
   <div class="section-head">
+    <span class="kicker">Юу хийж чадах вэ?</span>
     <h2>Боломжуудаа судлаарай</h2>
     <p>Сошиал сүлжээгээ автоматаар удирдаж, өсгөх хэрэгслүүд.</p>
   </div>
   <div class="feature-grid">
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--coral);"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-4 4V5z"/></svg></div>
+      <div class="feature-icon" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-4 4V5z"/></svg></div>
       <h3>AI чат туслах</h3>
       <p>Танай мэдлэгийн санд тулгуурлан, аль ч хэл дээр 24/7 харилцагчид хариулна.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--teal);"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L20 10l-4.5 3.3L16.8 19 12 15.9 7.2 19l1.3-5.7L4 10l5.8-1.8L12 3z"/></svg></div>
+      <div class="feature-icon" style="background:var(--orange);"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L20 10l-4.5 3.3L16.8 19 12 15.9 7.2 19l1.3-5.7L4 10l5.8-1.8L12 3z"/></svg></div>
       <h3>Коммент автоматжуулалт</h3>
       <p>Пост, reel, live дээрх коммент бүрд тохирсон хариулт бичих ажлыг AI гүйцэтгэнэ.</p>
     </div>
     <div class="feature-card flag">
-      <div class="feature-icon" style="background:#e14a2c;"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6l7-3z"/></svg></div>
+      <div class="feature-icon" style="background:var(--coral);"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6l7-3z"/></svg></div>
       <h3>TrollGuard</h3>
       <p>Доромжлол, спам коммент-ийг таньж, нийтэд харагдахаас өмнө нуух — брэндийг чинь сахина.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--mustard);"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="1"/><path d="M4 8h16"/></svg></div>
+      <div class="feature-icon" style="background:var(--orange);"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="1"/><path d="M4 8h16"/></svg></div>
       <h3>Вэбсайт угсрагч</h3>
       <p>Drag-and-drop засварлагчаар өөрийн энгийн сайтаа угсарч, шууд нийтлэнэ.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--coral);"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 9h16M9 13h6"/></svg></div>
+      <div class="feature-icon" style="background:var(--blue);"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 9h16M9 13h6"/></svg></div>
       <h3>Маркетинг автоматжуулалт</h3>
-      <p>Пост товлож, тогтоосон цагт нь Instagram/Facebook дээр автоматаар нийтэлнэ.</p>
+      <p>Пост товлож, тогтоосон цагт нь Facebook Page дээр автоматаар нийтэлнэ.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--teal);"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
+      <div class="feature-icon" style="background:var(--orange);"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
       <h3>Харилцагчийн удирдлага</h3>
       <p>Lead болон харилцагчдаа бүртгэж, төлвөөр нь ялгаж, дагаж мөрддөг энгийн CRM.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--mustard);"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="0.5"/><rect x="13" y="4" width="7" height="7" rx="0.5"/><rect x="4" y="13" width="7" height="7" rx="0.5"/><rect x="13" y="13" width="7" height="7" rx="0.5"/></svg></div>
+      <div class="feature-icon" style="background:var(--orange);"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="0.5"/><rect x="13" y="4" width="7" height="7" rx="0.5"/><rect x="4" y="13" width="7" height="7" rx="0.5"/><rect x="13" y="13" width="7" height="7" rx="0.5"/></svg></div>
       <h3>Захиалгын систем</h3>
       <p>Бүтээгдэхүүнээ бүртгэж, ирсэн захиалгыг шинэ-бэлтгэж буй-дууссан гэж удирдана.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--coral);"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+      <div class="feature-icon" style="background:var(--blue);"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
       <h3>Дата тайлан</h3>
       <p>Харилцан яриа, захиалга, орлого, коммент статистикаа нэг дороос харна.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon" style="background:var(--teal);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 12l2 2 4-4.5"/></svg></div>
+      <div class="feature-icon" style="background:var(--orange);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 12l2 2 4-4.5"/></svg></div>
       <h3>Олон agent, нэг данс</h3>
       <p>Багцынхаа хэмжээгээр хэдэн agent зэрэг ажиллуулж, тус бүрийг өөр вэбсайт дээр суулгана.</p>
     </div>
@@ -239,7 +269,7 @@
       <h3>Start</h3>
       <div class="desc">Дөнгөж эхэлж буй бизнест.</div>
       <div class="amount">49,900₮ <span>/сар</span></div>
-      <a class="btn btn-ghost" href="/dashboard.html">Start сонгох</a>
+      <a class="btn btn-ghost" href="/dashboard.html?plan=start">Start сонгох</a>
       <div class="included-label">Юу орсон бэ</div>
       <ul>
         <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>1 AI agent</li>
@@ -258,7 +288,7 @@
       <h3>Business</h3>
       <div class="desc">Дунд хэмжээний бизнест.</div>
       <div class="amount">129,900₮ <span>/сар</span></div>
-      <a class="btn btn-primary" href="/dashboard.html">Business сонгох</a>
+      <a class="btn btn-primary" href="/dashboard.html?plan=business">Business сонгох</a>
       <div class="included-label">Юу орсон бэ</div>
       <ul>
         <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>3 AI agent</li>
@@ -276,7 +306,7 @@
       <h3>Enterprise</h3>
       <div class="desc">Их ачаалалтай бизнест.</div>
       <div class="amount">349,900₮ <span>/сар</span></div>
-      <a class="btn btn-ghost" href="/dashboard.html">Enterprise сонгох</a>
+      <a class="btn btn-ghost" href="/dashboard.html?plan=enterprise">Enterprise сонгох</a>
       <div class="included-label">Юу орсон бэ</div>
       <ul>
         <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>10 AI agent</li>

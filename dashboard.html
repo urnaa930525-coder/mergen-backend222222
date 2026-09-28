@@ -59,10 +59,15 @@
     <div id="signupForm" class="hidden">
       <label>Бизнесийн нэр</label>
       <input type="text" id="signupBizName" />
+      <div style="margin-top:-6px;margin-bottom:8px;"><a href="/namegen.html" style="font-size:12px;color:#cfa24d;">Нэр олдохгүй байна уу? AI-аас санал ав →</a></div>
       <label>Email</label>
       <input type="email" id="signupEmail" />
       <label>Нууц үг</label>
       <input type="password" id="signupPassword" />
+      <label>Бизнесийн төрөл (мэдлэгийн сангаа автоматаар бэлдэнэ)</label>
+      <select id="signupTemplate" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #333;background:#0e0e0e;color:#fff;font-size:14px;">
+        <option value="">— Сонгохгүй, хоосноор эхлэх —</option>
+      </select>
       <button onclick="signup()">Бүртгүүлэх</button>
     </div>
     <div id="authMsg"></div>
@@ -77,7 +82,20 @@
       </div>
       <div class="agent-list" id="agentList"></div>
 
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #262626;">
+      <div style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#999;margin-bottom:6px;">
+          <span>AI token хэрэглээ (энэ сар)</span>
+          <span id="tokenUsageLabel">0 / 0</span>
+        </div>
+        <div style="background:#0e0e0e;border-radius:6px;overflow:hidden;height:10px;">
+          <div id="tokenUsageBar" style="height:100%;width:0%;background:#fff;transition:width 0.3s;"></div>
+        </div>
+        <div id="tokenLimitWarning" class="hidden" style="margin-top:8px;font-size:12px;color:#ff8a8a;">
+          ⚠️ Энэ сарын token хязгаар дүүрч байна. Дүүрвэл AI хариулт зогсоно — багцаа шинэчлэх эсвэл дараа сар хүлээхэд шинэчлэгдэнэ.
+        </div>
+      </div>
+
+      <div id="upgradeSection" style="margin-top:16px;padding-top:16px;border-top:1px solid #262626;">
         <div style="font-size:13px;color:#aaa;margin-bottom:10px;">Багц шинэчлэх:</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="secondary" onclick="startUpgrade('start')">Start — 49,900₮</button>
@@ -88,6 +106,22 @@
           <img id="qpayQr" style="max-width:220px;width:100%;border-radius:8px;background:#fff;padding:8px;" />
           <div style="font-size:13px;color:#aaa;margin-top:10px;" id="qpayStatus">QPay апп-аараа уншуулж төлнө үү...</div>
         </div>
+      </div>
+
+      <div id="referralSection" style="margin-top:16px;padding-top:16px;border-top:1px solid #262626;">
+        <div style="font-size:13px;color:#aaa;margin-bottom:8px;">Найздаа зөвлөж хөнгөлөлт ав (20%):</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="referralLink" readonly style="flex:1;min-width:200px;font-size:12px;color:#ccc;" />
+          <button class="secondary" onclick="copyReferralLink()">Хуулах</button>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:#999;">Одоогийн credit үлдэгдэл: <strong id="creditBalance" style="color:#8affa0;">0₮</strong> (дараагийн төлбөрөөс автоматаар хасагдана)</div>
+        <div style="margin-top:4px;font-size:12px;color:#999;">Нэмэлт token: <strong id="bonusTokens" style="color:#8affa0;">0</strong> (сарын хязгаараас гадна, эхэлж зарцуулагдана)</div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:12px;color:#aaa;">Credit-ийг token болгож хөрвүүлэх:</span>
+          <input type="number" id="convertAmount" placeholder="Дүн (₮)" style="width:110px;font-size:12px;" />
+          <button class="secondary" onclick="convertCreditToTokens()">Хөрвүүлэх (1₮ = 20 token)</button>
+        </div>
+        <div id="convertMsg"></div>
       </div>
     </div>
 
@@ -170,6 +204,7 @@
       <div id="socialConnected" class="hidden">
         <div class="msg ok" style="display:inline-block;">✓ Холбогдсон: <strong id="connectedPageName"></strong></div>
         <button class="secondary" onclick="connectFacebook()" style="margin-left:8px;">Дахин холбох / өөр Page сонгох</button>
+        <div id="adAccountStatus" style="margin-top:8px;font-size:12px;"></div>
       </div>
 
       <div id="socialSettings" class="hidden" style="margin-top:18px;padding-top:18px;border-top:1px solid #262626;">
@@ -189,12 +224,24 @@
       <p style="color:#aaa;font-size:14px;">Пост товлож, SMS мэдэгдэл илгээ. Пост нийтлэхийн тулд дээрх "Коммент автоматжуулалт" хэсэгт Facebook Page-ээ холбосон байх шаардлагатай.</p>
 
       <h4 style="margin:20px 0 6px;font-size:14px;">Пост товлох</h4>
+      <div style="margin-bottom:8px;"><a href="/contentgen.html" target="_blank" style="font-size:12px;color:#cfa24d;">Зурган пост хэрэгтэй юу? AI-аар үүсгэх →</a></div>
       <label>Гарчиг/текст</label>
       <textarea id="postCaption" style="min-height:70px;"></textarea>
       <label>Зургийн URL (сонголт)</label>
       <input type="text" id="postMediaUrl" placeholder="https://..." />
       <label>Нийтлэх огноо, цаг</label>
       <input type="datetime-local" id="postScheduledAt" />
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:14px;">
+        <input type="checkbox" id="postBoostEnabled" style="width:auto;" onchange="document.getElementById('boostFields').classList.toggle('hidden', !this.checked)" />
+        Ads Manager-аар boost хийх (мөнгө зарцуулна)
+      </label>
+      <div id="boostFields" class="hidden" style="margin-top:8px;padding:10px;background:#0e0e0e;border-radius:8px;">
+        <label>Өдрийн төсөв (₮)</label>
+        <input type="number" id="boostBudget" placeholder="жишээ нь: 10000" />
+        <label>Үргэлжлэх хугацаа (өдөр)</label>
+        <input type="number" id="boostDuration" value="3" min="1" />
+        <div style="font-size:11px;color:#999;margin-top:4px;">Төлбөрийг Meta шууд танай Ad Account-аас хасна, Mergen дамжуулахгүй.</div>
+      </div>
       <button onclick="schedulePost()">Товлох</button>
       <div id="postMsg"></div>
       <div id="postList" style="margin-top:16px;"></div>
@@ -207,6 +254,22 @@
       <button onclick="sendSmsMsg()">Илгээх</button>
       <div id="smsMsg"></div>
       <div id="smsList" style="margin-top:16px;"></div>
+    </div>
+
+    <div class="card" id="teamCard">
+      <h3>Багийн гишүүд</h3>
+      <p style="color:#aaa;font-size:14px;">Ажилтнууддаа dashboard-д нэвтрэх эрх өгнө. Ажилтан танай багц/төлбөр, гишүүдийн жагсаалтыг өөрчлөх эрхгүй, гэхдээ chat, CRM, захиалга, маркетингийн хэсгүүдийг ижил ашиглана.</p>
+      <div id="teamOwnerOnly">
+        <label>Ажилтны имэйл</label>
+        <input type="email" id="teamEmail" />
+        <label>Нэр (сонголт)</label>
+        <input type="text" id="teamName" />
+        <label>Түр нууц үг</label>
+        <input type="text" id="teamPassword" placeholder="Хамгийн багадаа 6 тэмдэгт" />
+        <button onclick="addTeamMember()">Гишүүн нэмэх</button>
+        <div id="teamMsg"></div>
+      </div>
+      <div id="teamList" style="margin-top:14px;"></div>
     </div>
 
     <div class="card" id="crmCard">
@@ -270,9 +333,31 @@
   let token = localStorage.getItem('mergen_token');
   let agents = [];
   let currentAgentId = null;
+  const pendingPlan = new URLSearchParams(window.location.search).get('plan');
+  const pendingRef = new URLSearchParams(window.location.search).get('ref');
+  const pendingBizName = new URLSearchParams(window.location.search).get('bizname');
+  if (pendingBizName) {
+    document.getElementById('signupBizName').value = pendingBizName;
+  }
+  const pendingMediaUrl = new URLSearchParams(window.location.search).get('media');
+  const pendingCaption = new URLSearchParams(window.location.search).get('caption');
 
   document.getElementById('tabLogin').onclick = () => switchTab('login');
   document.getElementById('tabSignup').onclick = () => switchTab('signup');
+  if ((pendingPlan || pendingBizName) && !token) switchTab('signup');
+
+  fetch(API + '/api/templates')
+    .then((r) => r.json())
+    .then((data) => {
+      const select = document.getElementById('signupTemplate');
+      data.templates.forEach((t) => {
+        const opt = document.createElement('option');
+        opt.value = t.key;
+        opt.textContent = t.emoji + ' ' + t.label;
+        select.appendChild(opt);
+      });
+    })
+    .catch(() => {});
 
   function switchTab(tab) {
     document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
@@ -290,15 +375,17 @@
     const business_name = document.getElementById('signupBizName').value;
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPassword').value;
+    const template = document.getElementById('signupTemplate').value;
     const res = await fetch(API + '/api/auth/signup', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ business_name, email, password })
+      body: JSON.stringify({ business_name, email, password, ref: pendingRef, template })
     });
     const data = await res.json();
     if (!res.ok) return showMsg('authMsg', data.error, false);
     token = data.token;
     localStorage.setItem('mergen_token', token);
-    enterDashboard();
+    await enterDashboard();
+    if (pendingPlan) startUpgrade(pendingPlan);
   }
 
   async function login() {
@@ -312,7 +399,8 @@
     if (!res.ok) return showMsg('authMsg', data.error, false);
     token = data.token;
     localStorage.setItem('mergen_token', token);
-    enterDashboard();
+    await enterDashboard();
+    if (pendingPlan) startUpgrade(pendingPlan);
   }
 
   function logout() {
@@ -335,6 +423,16 @@
     await loadProducts();
     await loadOrders();
     await loadAnalytics();
+    await loadTeam();
+    applyPendingMedia();
+  }
+
+  function applyPendingMedia() {
+    if (!pendingMediaUrl) return;
+    document.getElementById('postMediaUrl').value = pendingMediaUrl;
+    if (pendingCaption) document.getElementById('postCaption').value = pendingCaption;
+    const card = document.getElementById('marketingCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function loadPlan() {
@@ -343,8 +441,45 @@
     const data = await res.json();
     document.getElementById('planLabel').textContent = data.plan_label;
     document.getElementById('planUsage').textContent = data.agents_used + ' / ' + data.max_agents + ' agent';
+
+    const pct = Math.min(100, (data.tokens_used / data.token_limit) * 100);
+    document.getElementById('tokenUsageBar').style.width = pct + '%';
+    document.getElementById('tokenUsageBar').style.background = pct >= 90 ? '#ff6f51' : '#fff';
+    document.getElementById('tokenUsageLabel').textContent =
+      data.tokens_used.toLocaleString() + ' / ' + data.token_limit.toLocaleString();
+    document.getElementById('tokenLimitWarning').classList.toggle('hidden', pct < 90);
+
+    if (data.referral_code) {
+      document.getElementById('referralLink').value = window.location.origin + '/dashboard.html?ref=' + data.referral_code;
+    }
+    document.getElementById('creditBalance').textContent = Math.round(data.credit_balance).toLocaleString() + '₮';
+    document.getElementById('bonusTokens').textContent = Math.round(data.bonus_tokens).toLocaleString();
+
     window._planData = data;
     applyPlanFeatures();
+  }
+
+  function copyReferralLink() {
+    const input = document.getElementById('referralLink');
+    input.select();
+    navigator.clipboard.writeText(input.value).catch(() => {
+      document.execCommand && document.execCommand('copy');
+    });
+  }
+
+  async function convertCreditToTokens() {
+    const amountInput = document.getElementById('convertAmount').value;
+    const body = amountInput ? { amount: Number(amountInput) } : {};
+    const res = await fetch(API + '/api/billing/convert-credit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('convertMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('convertMsg', '+' + data.tokens_gained.toLocaleString() + ' token нэмэгдлээ ✓', true);
+    document.getElementById('convertAmount').value = '';
+    await loadPlan();
   }
 
   function applyPlanFeatures() {
@@ -397,9 +532,22 @@
       document.getElementById('qpayStatus').textContent = data.error || 'Алдаа гарлаа';
       return;
     }
+    if (data.paid_with_credit) {
+      document.getElementById('qpayBox').classList.remove('hidden');
+      document.getElementById('qpayQr').style.display = 'none';
+      document.getElementById('qpayStatus').textContent =
+        'Credit-ээр бүтнээр нь төллөө ✓ (' + Math.round(data.credit_applied).toLocaleString() + '₮ хасагдлаа)';
+      document.getElementById('qpayBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await loadPlan();
+      return;
+    }
+    document.getElementById('qpayQr').style.display = '';
     document.getElementById('qpayBox').classList.remove('hidden');
     document.getElementById('qpayQr').src = 'data:image/png;base64,' + data.qr_image;
-    document.getElementById('qpayStatus').textContent = 'QPay апп-аараа уншуулж төлнө үү...';
+    document.getElementById('qpayStatus').textContent = data.credit_applied > 0
+      ? ('QPay апп-аараа уншуулж төлнө үү (' + Math.round(data.credit_applied).toLocaleString() + '₮ credit хассан)...')
+      : 'QPay апп-аараа уншуулж төлнө үү...';
+    document.getElementById('qpayBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     clearInterval(qpayPollTimer);
     qpayPollTimer = setInterval(async () => {
@@ -484,7 +632,9 @@
     await loadAgents();
   }
 
-  if (token) enterDashboard();
+  if (token) {
+    enterDashboard().then(() => { if (pendingPlan) startUpgrade(pendingPlan); });
+  }
   handleSocialQueryParams();
 
   async function loadSocial() {
@@ -563,12 +713,18 @@
     const data = await res.json();
     const list = document.getElementById('postList');
     list.innerHTML = '';
+    const boostLabels = { none: '', created: '📢 Boost ажиллаж байна', failed: '⚠️ Boost амжилтгүй' };
     data.posts.forEach((p) => {
       const row = document.createElement('div');
-      row.style.cssText = 'font-size:13px;color:#ccc;padding:8px 0;border-top:1px solid #262626;display:flex;justify-content:space-between;gap:10px;';
+      row.style.cssText = 'font-size:13px;color:#ccc;padding:8px 0;border-top:1px solid #262626;';
       const statusColor = p.status === 'posted' ? '#8affa0' : p.status === 'failed' ? '#ff8a8a' : '#ccc';
-      row.innerHTML = '<span>' + new Date(p.scheduled_at).toLocaleString() + ' — ' + escapeHtmlDash(p.caption).slice(0, 40) + '</span>' +
-        '<span style="color:' + statusColor + ';">' + p.status + '</span>';
+      const boostColor = p.boost_status === 'created' ? '#8affa0' : '#ff8a8a';
+      row.innerHTML =
+        '<div style="display:flex;justify-content:space-between;gap:10px;">' +
+          '<span>' + new Date(p.scheduled_at).toLocaleString() + ' — ' + escapeHtmlDash(p.caption).slice(0, 40) + '</span>' +
+          '<span style="color:' + statusColor + ';">' + p.status + '</span>' +
+        '</div>' +
+        (p.boost_enabled ? '<div style="margin-top:3px;font-size:11px;color:' + boostColor + ';">' + (boostLabels[p.boost_status] || '') + '</div>' : '');
       list.appendChild(row);
     });
   }
@@ -579,18 +735,29 @@
     const caption = document.getElementById('postCaption').value;
     const media_url = document.getElementById('postMediaUrl').value;
     const scheduledInput = document.getElementById('postScheduledAt').value;
+    const boost_enabled = document.getElementById('postBoostEnabled').checked;
+    const boost_budget = document.getElementById('boostBudget').value;
+    const boost_duration_days = document.getElementById('boostDuration').value;
     if (!caption || !scheduledInput) return showMsg('postMsg', 'Текст болон огноо шаардлагатай', false);
+    if (boost_enabled && !boost_budget) return showMsg('postMsg', 'Boost асаасан бол өдрийн төсөв шаардлагатай', false);
     const scheduled_at = new Date(scheduledInput).toISOString();
     const res = await fetch(API + '/api/marketing/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ caption, media_url, scheduled_at })
+      body: JSON.stringify({
+        caption, media_url, scheduled_at, boost_enabled,
+        boost_budget: boost_budget ? Number(boost_budget) : null,
+        boost_duration_days: boost_duration_days ? Number(boost_duration_days) : 3,
+      })
     });
     const data = await res.json();
     if (!res.ok) return showMsg('postMsg', data.error || 'Алдаа гарлаа', false);
     showMsg('postMsg', 'Товлогдлоо ✓', true);
     document.getElementById('postCaption').value = '';
     document.getElementById('postMediaUrl').value = '';
+    document.getElementById('postBoostEnabled').checked = false;
+    document.getElementById('boostFields').classList.add('hidden');
+    document.getElementById('boostBudget').value = '';
     await loadPosts();
   }
 
@@ -895,6 +1062,63 @@
         .map((c) => (commentLabels[c.classification] || c.classification) + ': <strong>' + c.count + '</strong>')
         .join('<br/>');
     }
+  }
+
+  // ---- Team members ----
+  async function loadTeam() {
+    const res = await fetch(API + '/api/team', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const isOwner = data.my_role === 'owner';
+    document.getElementById('teamOwnerOnly').classList.toggle('hidden', !isOwner);
+    document.getElementById('upgradeSection').classList.toggle('hidden', !isOwner);
+    document.getElementById('referralSection').classList.toggle('hidden', !isOwner);
+    window._myRole = data.my_role;
+
+    const list = document.getElementById('teamList');
+    list.innerHTML = '';
+    if (data.members.length === 0) {
+      list.innerHTML = '<div style="color:#666;font-size:13px;">Ажилтан алга байна.</div>';
+      return;
+    }
+    data.members.forEach((m) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:10px 0;border-top:1px solid #262626;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;';
+      row.innerHTML = '<div><strong>' + escapeHtmlDash(m.name || m.email) + '</strong><div style="color:#999;">' + escapeHtmlDash(m.email) + '</div></div>';
+      if (isOwner) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'secondary';
+        delBtn.style.cssText = 'margin-top:0;padding:5px 10px;font-size:12px;';
+        delBtn.textContent = 'Хасах';
+        delBtn.onclick = () => removeTeamMember(m.id);
+        row.appendChild(delBtn);
+      }
+      list.appendChild(row);
+    });
+  }
+
+  async function addTeamMember() {
+    const email = document.getElementById('teamEmail').value;
+    const name = document.getElementById('teamName').value;
+    const password = document.getElementById('teamPassword').value;
+    if (!email || !password) return showMsg('teamMsg', 'Имэйл, нууц үг заавал хэрэгтэй', false);
+    const res = await fetch(API + '/api/team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ email, name, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('teamMsg', data.error || 'Алдаа гарлаа', false);
+    showMsg('teamMsg', 'Нэмэгдлээ ✓', true);
+    document.getElementById('teamEmail').value = '';
+    document.getElementById('teamName').value = '';
+    document.getElementById('teamPassword').value = '';
+    await loadTeam();
+  }
+
+  async function removeTeamMember(id) {
+    await fetch(API + '/api/team/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+    await loadTeam();
   }
 </script>
 </body>
