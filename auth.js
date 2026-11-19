@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
-const { pool } = require('./db');
+const { pool, TRIAL_DAYS, TRIAL_PLAN } = require('./db');
 const { TEMPLATES } = require('./templates');
 
 const router = express.Router();
@@ -40,9 +40,9 @@ router.post('/signup', async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO businesses (email, password_hash, business_name, referral_code, referred_by)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, email, business_name, plan, referral_code`,
-      [email, passwordHash, business_name, referralCode, referredBy]
+      `INSERT INTO businesses (email, password_hash, business_name, referral_code, referred_by, plan, trial_ends_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW() + ($7 || ' days')::interval) RETURNING id, email, business_name, plan, referral_code, trial_ends_at`,
+      [email, passwordHash, business_name, referralCode, referredBy, TRIAL_PLAN, String(TRIAL_DAYS)]
     );
     const business = result.rows[0];
 
