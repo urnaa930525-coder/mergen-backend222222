@@ -37,7 +37,7 @@ router.post('/create-invoice', requireAuth, requireOwner, async (req, res) => {
 
   // Credit fully covers the plan — upgrade instantly, no QPay invoice needed.
   if (amountDue <= 0) {
-    await pool.query('UPDATE businesses SET plan = $1, credit_balance = credit_balance - $2 WHERE id = $3', [plan, creditApplied, req.businessId]);
+    await pool.query('UPDATE businesses SET plan = $1, credit_balance = credit_balance - $2, trial_ends_at = NULL WHERE id = $3', [plan, creditApplied, req.businessId]);
     return res.json({ paid_with_credit: true, credit_applied: creditApplied });
   }
 
@@ -138,7 +138,7 @@ async function markInvoicePaid(invoice) {
     await pool.query('UPDATE businesses SET credit_balance = GREATEST(credit_balance - $1, 0) WHERE id = $2', [invoice.credit_applied, invoice.business_id]);
   }
 
-  await pool.query(`UPDATE businesses SET plan = $1 WHERE id = $2`, [invoice.plan, invoice.business_id]);
+  await pool.query(`UPDATE businesses SET plan = $1, trial_ends_at = NULL WHERE id = $2`, [invoice.plan, invoice.business_id]);
 
   // First-ever successful payment of this business? (we already flipped this invoice to paid, so count === 1)
   const paidCount = await pool.query(
