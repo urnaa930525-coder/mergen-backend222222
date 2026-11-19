@@ -439,7 +439,8 @@
     const res = await fetch(API + '/api/agent/plan', { headers: { Authorization: 'Bearer ' + token } });
     if (!res.ok) return logout();
     const data = await res.json();
-    document.getElementById('planLabel').textContent = data.plan_label;
+    document.getElementById('planLabel').textContent = data.plan_label +
+      (data.trial_days_left !== null && data.trial_days_left !== undefined ? ' (үнэгүй туршилт: ' + data.trial_days_left + ' хоног үлдсэн)' : '');
     document.getElementById('planUsage').textContent = data.agents_used + ' / ' + data.max_agents + ' agent';
 
     const pct = Math.min(100, (data.tokens_used / data.token_limit) * 100);
