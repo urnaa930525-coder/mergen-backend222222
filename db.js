@@ -56,6 +56,8 @@ async function initDb() {
   await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS referred_by INTEGER REFERENCES businesses(id);`);
   await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS credit_balance NUMERIC NOT NULL DEFAULT 0;`);
   await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS bonus_tokens BIGINT NOT NULL DEFAULT 0;`);
+  // Free trial: new sign-ups get the Business plan until trial_ends_at, then drop back to Start unless they paid.
+  await pool.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP;`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agents (
@@ -279,4 +281,16 @@ async function initDb() {
   console.log('Database schema ready.');
 }
 
-module.exports = { pool, initDb, PLANS, TOKEN_CONVERSION_RATE };
+const TRIAL_DAYS = 7;
+const TRIAL_PLAN = 'business';
+
+// Drops every business whose free trial has run out back to the Start plan.
+// Paying clears trial_ends_at, so paid businesses are never touched. Cheap single UPDATE; call before reading `plan`.
+async function expireTrials() {
+  await pool.query(
+    `UPDATE businesses SET plan = 'start', trial_ends_at = NULL
+     WHERE trial_ends_at IS NOT NULL AND trial_ends_at < NOW()`
+  );
+}
+
+module.exports = { pool, initDb, PLANS, TOKEN_CONVERSION_RATE, TRIAL_DAYS, TRIAL_PLAN, expireTrials };
