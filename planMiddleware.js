@@ -1,9 +1,10 @@
-const { pool, PLANS } = require('./db');
+const { pool, PLANS, expireTrials } = require('./db');
 
 // Use AFTER requireAuth (needs req.businessId already set).
 function requireFeature(featureName) {
   return async (req, res, next) => {
     try {
+      await expireTrials();
       const result = await pool.query('SELECT plan FROM businesses WHERE id = $1', [req.businessId]);
       const plan = PLANS[result.rows[0].plan] || PLANS.start;
       if (!plan.features.includes(featureName)) {
