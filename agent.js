@@ -1,6 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { pool, PLANS } = require('./db');
+const { pool, PLANS, expireTrials } = require('./db');
 const { requireAuth } = require('./authMiddleware');
 const { currentYearMonth } = require('./claude');
 
@@ -8,7 +8,8 @@ const router = express.Router();
 
 // ---- Plan info ----
 router.get('/plan', requireAuth, async (req, res) => {
-  const bizResult = await pool.query('SELECT plan, referral_code, credit_balance, bonus_tokens FROM businesses WHERE id = $1', [req.businessId]);
+  await expireTrials();
+  const bizResult = await pool.query('SELECT plan, referral_code, credit_balance, bonus_tokens, trial_ends_at FROM businesses WHERE id = $1', [req.businessId]);
   const plan = bizResult.rows[0].plan;
   const countResult = await pool.query('SELECT COUNT(*) FROM agents WHERE business_id = $1', [req.businessId]);
   const usageResult = await pool.query(
@@ -17,6 +18,8 @@ router.get('/plan', requireAuth, async (req, res) => {
   );
   res.json({
     plan,
+    trial_ends_at: bizResult.rows[0].trial_ends_at,
+    trial_days_left: bizResult.rows[0].trial_ends_at ? Math.max(0, Math.ceil((new Date(bizResult.rows[0].trial_ends_at) - Date.now()) / 86400000)) : null,
     plan_label: (PLANS[plan] || PLANS.start).label,
     max_agents: (PLANS[plan] || PLANS.start).max_agents,
     agents_used: parseInt(countResult.rows[0].count, 10),
@@ -41,6 +44,7 @@ router.get('/', requireAuth, async (req, res) => {
 // ---- Create a new agent (limited by plan) ----
 router.post('/', requireAuth, async (req, res) => {
   const { agent_name } = req.body;
+  await expireTrials();
   const bizResult = await pool.query('SELECT plan FROM businesses WHERE id = $1', [req.businessId]);
   const plan = PLANS[bizResult.rows[0].plan] || PLANS.start;
   const countResult = await pool.query('SELECT COUNT(*) FROM agents WHERE business_id = $1', [req.businessId]);
