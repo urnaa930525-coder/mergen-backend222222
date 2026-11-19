@@ -1,4 +1,4 @@
-const { pool, PLANS } = require('./db');
+const { pool, PLANS, expireTrials } = require('./db');
 
 function currentYearMonth() {
   const now = new Date();
@@ -7,6 +7,7 @@ function currentYearMonth() {
 
 // ---- Has this business already used up its plan's monthly quota + bonus token pool? ----
 async function isOverTokenLimit(businessId) {
+  await expireTrials();
   const bizResult = await pool.query('SELECT plan, bonus_tokens FROM businesses WHERE id = $1', [businessId]);
   if (!bizResult.rows[0]) return false;
   const plan = PLANS[bizResult.rows[0].plan] || PLANS.start;
